@@ -18,6 +18,7 @@
 
   --shadow-neu-sm: 3px 3px 0 #1a1109;
   --shadow-neu-md: 5px 5px 0 #1a1109;
+  --shadow-neu: 5px 5px 0 #1a1109;
   --shadow-neu-lg: 7px 7px 0 #1a1109;
   --shadow-neu-camel: 6px 6px 0 #c19a6b;
   --shadow-neu-sienna-soft: 4px 4px 0 rgba(193, 154, 107, 0.4);
@@ -214,6 +215,57 @@
     rgba(193, 154, 107, 0.12) 12px,
     rgba(193, 154, 107, 0.12) 24px
   );
+}
+
+.hatch-sidebar {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 12px,
+    rgba(193, 154, 107, 0.15) 12px,
+    rgba(193, 154, 107, 0.15) 24px
+  );
+}
+
+/* Signup — neubrutalist buttons & inputs */
+.neu-btn {
+  box-shadow: 5px 5px 0 #1a1109;
+  transition:
+    box-shadow 0.1s ease,
+    transform 0.1s ease;
+}
+.neu-btn:hover,
+.neu-btn:active {
+  box-shadow: none;
+  transform: translate(5px, 5px);
+}
+
+.neu-btn-sm {
+  box-shadow: 3px 3px 0 #1a1109;
+  transition:
+    box-shadow 0.1s ease,
+    transform 0.1s ease;
+}
+.neu-btn-sm:hover,
+.neu-btn-sm:active {
+  box-shadow: none;
+  transform: translate(3px, 3px);
+}
+
+.neu-input {
+  box-shadow: 4px 4px 0 #1a1109;
+  transition:
+    box-shadow 0.1s ease,
+    transform 0.1s ease;
+  outline: none;
+}
+.neu-input:focus {
+  box-shadow: none;
+  transform: translate(4px, 4px);
+}
+
+.pw-toggle {
+  cursor: pointer;
 }
 
 /* Mode item hover */
