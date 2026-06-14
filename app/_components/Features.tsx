@@ -44,32 +44,91 @@ const FEATURES = [
   },
 ];
 
+const featureGridClass = [
+  "grid grid-cols-1 border-2 border-ink shadow-neu-lg",
+  "sm:max-[1100px]:grid-cols-2",
+  "min-[1101px]:grid-cols-3",
+  // Mobile — single column, horizontal dividers only
+  "max-sm:[&>*]:border-b-2 max-sm:[&>*]:border-r-0 max-sm:[&>*]:border-ink",
+  "max-sm:[&>*:last-child]:border-b-0",
+  // Tablet — 2 columns
+  "sm:max-[1100px]:[&>*]:border-r-2 sm:max-[1100px]:[&>*]:border-b-2 sm:max-[1100px]:[&>*]:border-ink",
+  "sm:max-[1100px]:[&>*:nth-child(2n)]:border-r-0",
+  "sm:max-[1100px]:[&>*:nth-last-child(-n+2)]:border-b-0",
+  // Desktop — 3 columns
+  "min-[1101px]:[&>*]:border-r-2 min-[1101px]:[&>*]:border-b-2 min-[1101px]:[&>*]:border-ink",
+  "min-[1101px]:[&>*:nth-child(3n)]:border-r-0",
+  "min-[1101px]:[&>*:nth-child(n+4)]:border-b-0",
+].join(" ");
+
 function Features() {
   return (
-    <section className="features" id="features">
-      <div className="features-header">
+    <section
+      id="features"
+      className="bg-cream px-5 py-[60px] sm:px-8 sm:py-20 min-[1101px]:px-[60px] min-[1101px]:py-[100px]"
+    >
+      <div className="mb-14 grid grid-cols-1 items-end gap-6 min-[1101px]:grid-cols-2 min-[1101px]:gap-10">
         <div>
-          <span className="section-eyebrow">What you get</span>
-          <h2 className="section-title">
+          <span className="mb-5 inline-block border-2 border-ink bg-pale px-3 py-1 font-grotesk text-[0.68rem] font-bold tracking-[0.12em] text-sienna uppercase">
+            What you get
+          </span>
+          <h2 className="max-w-[600px] font-grotesk text-[clamp(1.9rem,3.5vw,2.8rem)] leading-[1.1] font-bold tracking-[-1px] text-ink">
             Every scenario you&apos;ll face, before you face it
           </h2>
         </div>
-        <p className="section-sub">
+        <p className="max-w-[480px] text-[0.975rem] leading-[1.75] text-mid min-[1101px]:justify-self-end">
           Simustratum simulates real academic pressure so that when the actual
           moment comes, your brain has already been there before.
         </p>
       </div>
 
-      <div className="features-grid">
+      <div className={featureGridClass}>
         {FEATURES.map((feature) => (
           <div
             key={feature.title}
-            className={`feature-card${feature.featured ? " featured" : ""}`}
+            className={[
+              "cursor-default px-7 py-8 transition-colors duration-150",
+              feature.featured
+                ? "bg-sienna hover:bg-[#8B4220]"
+                : "bg-white hover:bg-pale",
+            ].join(" ")}
           >
-            <div className="feature-icon">{feature.icon}</div>
-            <div className="feature-title">{feature.title}</div>
-            <p className="feature-desc">{feature.description}</p>
-            <span className="feature-tag">{feature.tag}</span>
+            <div
+              className={[
+                "mb-5 flex h-11 w-11 items-center justify-center text-[1.2rem]",
+                feature.featured
+                  ? "border border-white/40 bg-white/15"
+                  : "border-2 border-ink bg-pale",
+              ].join(" ")}
+            >
+              {feature.icon}
+            </div>
+            <p
+              className={[
+                "mb-2.5 font-grotesk text-[1rem] font-bold tracking-[-0.2px]",
+                feature.featured ? "text-white" : "text-ink",
+              ].join(" ")}
+            >
+              {feature.title}
+            </p>
+            <p
+              className={[
+                "text-[0.85rem] leading-[1.65]",
+                feature.featured ? "text-white/72" : "text-mid",
+              ].join(" ")}
+            >
+              {feature.description}
+            </p>
+            <span
+              className={[
+                "mt-[18px] inline-block px-[9px] py-[3px] font-grotesk text-xxs font-bold tracking-[0.09em] uppercase",
+                feature.featured
+                  ? "border-[1.5px] border-white/50 text-white/85"
+                  : "border-[1.5px] border-ink text-ink",
+              ].join(" ")}
+            >
+              {feature.tag}
+            </span>
           </div>
         ))}
       </div>

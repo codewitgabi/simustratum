@@ -3,7 +3,7 @@ import { Inter, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 
 const inter = Inter({
-  variable: "--font-inter",
+  variable: "--font-inter-family",
   subsets: ["latin"],
   weight: ["400", "500", "600"],
   display: "swap",
@@ -28,11 +28,10 @@ function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`${inter.variable} ${spaceGrotesk.variable} scroll-smooth antialiased`}
-    >
-      <body>{children}</body>
+    <html lang="en" className={`${inter.variable} ${spaceGrotesk.variable}`}>
+      <body className="overflow-x-hidden bg-cream font-inter text-ink">
+        {children}
+      </body>
     </html>
   );
 }
