@@ -23,7 +23,7 @@ function SignupLogo({
         className={[
           "flex h-7 w-7 shrink-0 items-center justify-center border-2",
           isDark
-            ? "neu-btn-sm border-camel bg-sienna"
+            ? "neu-press-sm border-camel bg-sienna shadow-[3px_3px_0_rgba(193,154,107,0.5)]"
             : "border-ink bg-sienna shadow-[2px_2px_0_#1A1109]",
         ].join(" ")}
       >

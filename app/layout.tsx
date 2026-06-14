@@ -28,7 +28,11 @@ function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} ${spaceGrotesk.variable}`}>
+    <html
+      lang="en"
+      data-scroll-behavior="smooth"
+      className={`${inter.variable} ${spaceGrotesk.variable}`}
+    >
       <body className="overflow-x-hidden bg-cream font-inter text-ink">
         {children}
       </body>

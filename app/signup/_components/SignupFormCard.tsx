@@ -1,5 +1,5 @@
 import Link from "next/link";
-import GoogleSignInButton from "./GoogleSignInButton";
+import GoogleSignInButton from "@/components/GoogleSignInButton";
 import PasswordField from "./PasswordField";
 import TermsCheckbox from "./TermsCheckbox";
 
@@ -15,7 +15,7 @@ function SignupFormCard() {
         </h1>
       </div>
 
-      <GoogleSignInButton />
+      <GoogleSignInButton className="mb-6" />
 
       <div className="mb-6 flex items-center gap-3">
         <div className="h-[2px] flex-1 bg-ink/10" />

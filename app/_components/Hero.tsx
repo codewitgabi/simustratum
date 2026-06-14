@@ -1,3 +1,4 @@
+import Link from "next/link";
 import HeroCard from "./HeroCard";
 
 function Hero() {
@@ -33,8 +34,8 @@ function Hero() {
         </p>
 
         <div className="flex flex-wrap items-center gap-4">
-          <a
-            href="#"
+          <Link
+            href="/signup"
             className="neu-press inline-flex items-center gap-2.5 border-[3px] border-ink bg-sienna px-7 py-[14px] font-grotesk text-[0.95rem] font-bold text-white no-underline shadow-neu-md"
           >
             Start practicing free
@@ -53,7 +54,7 @@ function Hero() {
                 strokeLinejoin="round"
               />
             </svg>
-          </a>
+          </Link>
           <a
             href="#how"
             className="neu-press inline-flex items-center gap-2.5 border-[3px] border-ink bg-white px-6 py-[14px] font-grotesk text-[0.95rem] font-bold text-ink no-underline shadow-neu-md hover:bg-pale"

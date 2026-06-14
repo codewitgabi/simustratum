@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 function CtaSection() {
   return (
     <section className="relative overflow-hidden bg-ink px-5 py-[60px] sm:px-8 sm:py-20 min-[1101px]:px-[60px] min-[1101px]:py-[100px]">
@@ -21,8 +23,8 @@ function CtaSection() {
           Join students who stopped dreading academic speaking — and started
           owning it.
         </p>
-        <a
-          href="#"
+        <Link
+          href="/signup"
           className="neu-press inline-flex items-center gap-3 border-[3px] border-ink bg-white px-8 py-4 font-grotesk text-[1rem] font-bold text-ink no-underline shadow-neu-camel"
         >
           Start your first session free
@@ -41,7 +43,7 @@ function CtaSection() {
               strokeLinejoin="round"
             />
           </svg>
-        </a>
+        </Link>
       </div>
     </section>
   );

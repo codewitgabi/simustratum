@@ -1,8 +1,12 @@
-function GoogleSignInButton() {
+type GoogleSignInButtonProps = {
+  className?: string;
+};
+
+function GoogleSignInButton({ className = "" }: GoogleSignInButtonProps) {
   return (
     <button
       type="button"
-      className="neu-btn mb-6 flex w-full cursor-pointer items-center justify-center gap-3 border-2 border-ink bg-white px-4 py-3 font-grotesk text-[0.875rem] font-bold text-ink"
+      className={`neu-press flex w-full cursor-pointer items-center justify-center gap-3 border-2 border-ink bg-white px-4 py-3 font-grotesk text-[0.875rem] font-bold text-ink shadow-neu-md ${className}`}
     >
       <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden>
         <path

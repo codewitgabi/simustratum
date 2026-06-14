@@ -5,7 +5,7 @@ type LogoProps = {
   className?: string;
 };
 
-function Logo({ href = "#", className = "" }: LogoProps) {
+function Logo({ href = "/", className = "" }: LogoProps) {
   return (
     <Link
       href={href}
