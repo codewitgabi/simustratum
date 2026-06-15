@@ -110,24 +110,28 @@ function DashboardSidebarContent({
         ))}
       </nav>
 
-      <div
-        className={[
-          "flex min-h-0 flex-1 flex-col overflow-y-auto",
-          collapsed ? "px-2 pt-1" : "px-3 pt-2",
-        ].join(" ")}
-      >
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         {!collapsed && (
-          <p className="mb-3 px-3 font-grotesk text-[0.6rem] font-bold tracking-[0.12em] text-white/25 uppercase">
+          <p className="mb-3 shrink-0 px-3 pt-2 font-grotesk text-[0.6rem] font-bold tracking-[0.12em] text-white/25 uppercase">
             Recent Sessions
           </p>
         )}
-        {RECENT_SESSIONS.map((session) => (
-          <RecentSessionItem
-            key={session.title}
-            {...session}
-            collapsed={collapsed}
-          />
-        ))}
+        <div
+          className={[
+            "sidebar-sessions-scroll min-h-0 flex-1 overflow-y-auto",
+            collapsed ? "px-2 pt-1" : "",
+          ].join(" ")}
+        >
+          <div className={collapsed ? "" : "pl-3 pr-1"}>
+            {RECENT_SESSIONS.map((session) => (
+              <RecentSessionItem
+                key={session.title}
+                {...session}
+                collapsed={collapsed}
+              />
+            ))}
+          </div>
+        </div>
       </div>
 
       <div
