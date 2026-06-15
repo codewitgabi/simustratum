@@ -5,18 +5,21 @@ type SignupLogoProps = {
   href?: string;
   variant?: "dark" | "light";
   className?: string;
+  onClick?: () => void;
 };
 
 function SignupLogo({
   href = "/",
   variant = "light",
   className = "",
+  onClick,
 }: SignupLogoProps) {
   const isDark = variant === "dark";
 
   return (
     <Link
       href={href}
+      onClick={onClick}
       className={`flex items-center gap-2.5 no-underline ${className}`}
     >
       <span
