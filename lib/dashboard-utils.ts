@@ -13,3 +13,17 @@ export function initialsFromName(name: string, fallback: string): string {
   }
   return trimmed.slice(0, 2).toUpperCase();
 }
+
+let idCounter = 0;
+
+export function createId(prefix = "id"): string {
+  if (
+    typeof crypto !== "undefined" &&
+    typeof crypto.randomUUID === "function"
+  ) {
+    return crypto.randomUUID();
+  }
+
+  idCounter += 1;
+  return `${prefix}-${idCounter}-${Math.random().toString(36).slice(2, 11)}`;
+}

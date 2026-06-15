@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 import type { ScenarioId } from "@/lib/dashboard-data";
+import { createId } from "@/lib/dashboard-utils";
 import DashboardHeader from "./DashboardHeader";
 import StepPanelists from "./StepPanelists";
 import StepReady, { type SessionOptions } from "./StepReady";
@@ -13,7 +14,7 @@ const MAX_PANELISTS = 3;
 
 function createPanelist(): Panelist {
   return {
-    id: crypto.randomUUID(),
+    id: createId("panelist"),
     name: "",
     role: "",
     strict: 50,
