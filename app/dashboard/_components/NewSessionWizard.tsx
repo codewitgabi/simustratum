@@ -1,8 +1,10 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { useRouter } from "next/navigation";
 import type { ScenarioId } from "@/lib/dashboard-data";
 import { createId } from "@/lib/dashboard-utils";
+import { DEFAULT_SCENARIO, DEFAULT_TOPIC } from "@/lib/session-data";
 import DashboardHeader from "./DashboardHeader";
 import StepPanelists from "./StepPanelists";
 import StepReady, { type SessionOptions } from "./StepReady";
@@ -23,6 +25,7 @@ function createPanelist(): Panelist {
 }
 
 function NewSessionWizard() {
+  const router = useRouter();
   const [step, setStep] = useState(1);
   const [selectedScenario, setSelectedScenario] = useState<ScenarioId | null>(
     null,
@@ -66,8 +69,20 @@ function NewSessionWizard() {
 
   const handleBeginSession = () => {
     setLaunching(true);
+
+    const sessionPanelists = panelists.map((panelist, index) => ({
+      name: panelist.name.trim() || `Panelist ${index + 1}`,
+      role: panelist.role.trim() || "Panelist",
+      strict: panelist.strict,
+      inquisitive: panelist.inquisitive,
+    }));
+
+    window.localStorage.setItem("ss_scenario", selectedScenario ?? DEFAULT_SCENARIO);
+    window.localStorage.setItem("ss_topic", topic.trim() || DEFAULT_TOPIC);
+    window.localStorage.setItem("ss_panelists", JSON.stringify(sessionPanelists));
+
     setTimeout(() => {
-      window.location.href = "#session";
+      router.push("/session");
     }, 1800);
   };
 

@@ -94,7 +94,7 @@ function StepReady({
                 <p className="font-grotesk text-[1rem] font-bold text-ink">
                   {meta.label}
                 </p>
-                <p className="text-[0.78rem] break-words text-mid">
+                <p className="text-[0.78rem] wrap-break-word text-mid">
                   {topic.trim() || "No topic entered"}
                 </p>
               </div>
