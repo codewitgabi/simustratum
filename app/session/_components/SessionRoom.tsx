@@ -1,23 +1,30 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createId } from "@/lib/dashboard-utils";
 import { SCENARIO_META, type ScenarioId } from "@/lib/dashboard-data";
 import {
+  BASELINE_SCORES,
   DEFAULT_PANELISTS,
   DEFAULT_SCENARIO,
   DEFAULT_TOPIC,
-  DEMO_QUESTIONS,
   PANELIST_GESTURES,
   PANELIST_VOICE_PROFILES,
-  computeScores,
   estimateSpeechDurationMs,
   type PanelistGesture,
   type SessionPanelist,
+  type SessionScores,
   type TranscriptMessage,
 } from "@/lib/session-data";
 import { useSessionSpeech } from "./hooks/useSessionSpeech";
+import {
+  useSessionSocket,
+  type PanelistQuestionPayload,
+  type ScoreUpdatePayload,
+  type SessionCompletePayload,
+  type SessionStatePayload,
+} from "./hooks/useSessionSocket";
 import RoomScene from "./RoomScene";
 import SessionTopBar from "./SessionTopBar";
 import ScorePanel from "./ScorePanel";
@@ -61,6 +68,7 @@ function SessionRoom() {
     stopListening,
   } = useSessionSpeech();
 
+  const [sessionId, setSessionId] = useState<string | null>(null);
   const [scenario, setScenario] = useState<ScenarioId>(DEFAULT_SCENARIO);
   const [topic, setTopic] = useState(DEFAULT_TOPIC);
   const [panelists, setPanelists] = useState<SessionPanelist[]>(DEFAULT_PANELISTS);
@@ -72,20 +80,34 @@ function SessionRoom() {
   const [transcriptOpen, setTranscriptOpen] = useState(false);
   const [audioEnabled, setAudioEnabled] = useState(true);
 
-  const [questionIndex, setQuestionIndex] = useState(0);
-  const [answeredCount, setAnsweredCount] = useState(0);
+  const [scores, setScores] = useState<SessionScores>(BASELINE_SCORES);
+  const [questionCount, setQuestionCount] = useState(0);
   const [activeSpeaker, setActiveSpeaker] = useState<number | null>(null);
   const [activeGesture, setActiveGesture] = useState<PanelistGesture>(PANELIST_GESTURES[0]);
   const [activeQuestion, setActiveQuestion] = useState("");
   const [waitingForAnswer, setWaitingForAnswer] = useState(false);
+  const [serverThinking, setServerThinking] = useState(false);
   const [transcript, setTranscript] = useState<TranscriptMessage[]>([]);
   const [elapsed, setElapsed] = useState(0);
+  const [fatalError, setFatalError] = useState<string | null>(null);
+  const [serverNotice, setServerNotice] = useState<string | null>(null);
 
   const speechCleanupRef = useRef<(() => void) | null>(null);
+  const answerStartedAtRef = useRef<number | null>(null);
+  const gestureCounterRef = useRef(0);
+
+  const panelistIndexById = useMemo(() => {
+    const map = new Map<string, number>();
+    panelists.forEach((panelist, index) => {
+      if (panelist.id) map.set(panelist.id, index);
+    });
+    return map;
+  }, [panelists]);
 
   useEffect(() => {
     const storedScenario = window.localStorage.getItem("ss_scenario");
     const storedTopic = window.localStorage.getItem("ss_topic");
+    const storedSessionId = window.localStorage.getItem("ss_session_id");
 
     if (storedScenario && storedScenario in SCENARIO_META) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -93,6 +115,12 @@ function SessionRoom() {
     }
     if (storedTopic) setTopic(storedTopic);
     setPanelists(loadPanelists());
+
+    if (storedSessionId) {
+      setSessionId(storedSessionId);
+    } else {
+      setFatalError("No active session found. Start a new one from the dashboard.");
+    }
   }, []);
 
   useEffect(() => {
@@ -107,66 +135,138 @@ function SessionRoom() {
     };
   }, []);
 
-  const scores = computeScores(answeredCount);
-
-  const askQuestion = useCallback(
-    (index: number) => {
-      const question = DEMO_QUESTIONS[index % DEMO_QUESTIONS.length];
-      const panelistIndex = question.panelistIndex % panelists.length;
-      const profile = PANELIST_VOICE_PROFILES[panelistIndex % PANELIST_VOICE_PROFILES.length];
-      const speaker = panelists[panelistIndex];
-
-      setActiveSpeaker(panelistIndex);
-      setActiveGesture(PANELIST_GESTURES[index % PANELIST_GESTURES.length]);
-      setActiveQuestion(question.text);
-      setWaitingForAnswer(false);
-
-      const onSpeechEnd = () => {
-        setActiveSpeaker(null);
-        setWaitingForAnswer(true);
-        setTranscript((prev) => [
-          ...prev,
-          { id: createId("msg"), speaker: speaker?.name ?? "Panelist", text: question.text, isUser: false },
-        ]);
-      };
-
-      speechCleanupRef.current?.();
-      if (audioEnabled) {
-        speechCleanupRef.current = speak(question.text, panelistIndex, profile, onSpeechEnd);
-      } else {
-        const timeout = window.setTimeout(onSpeechEnd, estimateSpeechDurationMs(question.text));
-        speechCleanupRef.current = () => window.clearTimeout(timeout);
-      }
-    },
-    [panelists, audioEnabled, speak],
-  );
-
-  const completeSession = useCallback(() => {
+  const finishSession = useCallback(() => {
     speechCleanupRef.current?.();
     cancelSpeech();
     stopListening();
     setActiveSpeaker(null);
     setWaitingForAnswer(false);
+    setServerThinking(false);
     setEndModalOpen(false);
     setEnded(true);
   }, [cancelSpeech, stopListening]);
 
-  const handleAnswer = useCallback(
-    (text: string) => {
-      setTranscript((prev) => [...prev, { id: createId("msg"), speaker: "You", text, isUser: true }]);
-      setAnsweredCount((count) => count + 1);
+  const speakQuestion = useCallback(
+    (text: string, panelistIndex: number, onDone: () => void) => {
+      const profile = PANELIST_VOICE_PROFILES[panelistIndex % PANELIST_VOICE_PROFILES.length];
+      speechCleanupRef.current?.();
+      if (audioEnabled) {
+        speechCleanupRef.current = speak(text, panelistIndex, profile, onDone);
+      } else {
+        const timeout = window.setTimeout(onDone, estimateSpeechDurationMs(text));
+        speechCleanupRef.current = () => window.clearTimeout(timeout);
+      }
+    },
+    [audioEnabled, speak],
+  );
+
+  const handleSessionState = useCallback(
+    (payload: SessionStatePayload) => {
+      setScores({ clarity: payload.clarity, confidence: payload.confidence, structure: payload.structure });
+      setQuestionCount(payload.question_count);
+      setActiveSpeaker(null);
+      setServerThinking(false);
+      setWaitingForAnswer(payload.awaiting_user_response);
+
+      if (payload.awaiting_user_response) {
+        answerStartedAtRef.current = Date.now();
+        setActiveQuestion((prev) =>
+          prev
+            ? prev
+            : payload.current_panelist_id === null
+              ? `Introduce your response on "${topic}" to begin.`
+              : "Continue your response to the panel's last question.",
+        );
+      }
+    },
+    [topic],
+  );
+
+  const handleScoreUpdate = useCallback((payload: ScoreUpdatePayload) => {
+    setScores({ clarity: payload.clarity, confidence: payload.confidence, structure: payload.structure });
+    setQuestionCount(payload.question_count);
+  }, []);
+
+  const handlePanelistQuestion = useCallback(
+    (payload: PanelistQuestionPayload) => {
+      const panelistIndex = panelistIndexById.get(payload.panelist_id) ?? 0;
+      const speakerName = panelists[panelistIndex]?.name ?? "Panelist";
+
+      gestureCounterRef.current += 1;
+      setServerThinking(false);
+      setActiveSpeaker(panelistIndex);
+      setActiveGesture(PANELIST_GESTURES[gestureCounterRef.current % PANELIST_GESTURES.length]);
+      setActiveQuestion(payload.question_text);
       setWaitingForAnswer(false);
 
-      const nextIndex = questionIndex + 1;
-      if (nextIndex >= DEMO_QUESTIONS.length) {
-        window.setTimeout(completeSession, 800);
-        return;
-      }
+      const onDone = () => {
+        setActiveSpeaker(null);
+        setWaitingForAnswer(true);
+        answerStartedAtRef.current = Date.now();
+        setTranscript((prev) => [
+          ...prev,
+          { id: createId("msg"), speaker: speakerName, text: payload.question_text, isUser: false },
+        ]);
+      };
 
-      setQuestionIndex(nextIndex);
-      window.setTimeout(() => askQuestion(nextIndex), 1000);
+      speakQuestion(payload.question_text, panelistIndex, onDone);
     },
-    [questionIndex, askQuestion, completeSession],
+    [panelistIndexById, panelists, speakQuestion],
+  );
+
+  const handleSessionComplete = useCallback(
+    (payload: SessionCompletePayload) => {
+      setScores({ clarity: payload.clarity, confidence: payload.confidence, structure: payload.structure });
+      setQuestionCount(payload.question_count);
+      finishSession();
+    },
+    [finishSession],
+  );
+
+  const handleServerError = useCallback((message: string) => {
+    setServerThinking(false);
+    setServerNotice(message);
+    window.setTimeout(() => setServerNotice((prev) => (prev === message ? null : prev)), 5000);
+  }, []);
+
+  const handleLoggedOut = useCallback(() => {
+    router.push("/login");
+  }, [router]);
+
+  const handleHardError = useCallback((reason: "forbidden" | "not_found") => {
+    setFatalError(
+      reason === "forbidden"
+        ? "This session doesn't belong to your account."
+        : "This session could not be found.",
+    );
+  }, []);
+
+  const { sendUserResponse, close: closeSocket } = useSessionSocket(started ? sessionId : null, {
+    onSessionState: handleSessionState,
+    onScoreUpdate: handleScoreUpdate,
+    onPanelistQuestion: handlePanelistQuestion,
+    onSessionComplete: handleSessionComplete,
+    onServerError: handleServerError,
+    onLoggedOut: handleLoggedOut,
+    onHardError: handleHardError,
+  });
+
+  const handleAnswer = useCallback(
+    (text: string) => {
+      const durationMs = answerStartedAtRef.current ? Date.now() - answerStartedAtRef.current : 0;
+      answerStartedAtRef.current = null;
+
+      setTranscript((prev) => [...prev, { id: createId("msg"), speaker: "You", text, isUser: true }]);
+      setWaitingForAnswer(false);
+      setServerThinking(true);
+
+      const sent = sendUserResponse(text, durationMs);
+      if (!sent) {
+        setServerThinking(false);
+        setServerNotice("Connection lost — reconnecting. Please try again in a moment.");
+      }
+    },
+    [sendUserResponse],
   );
 
   const handleStart = useCallback(() => {
@@ -174,8 +274,7 @@ function SessionRoom() {
     if (ttsSupported) {
       window.speechSynthesis.speak(new SpeechSynthesisUtterance(""));
     }
-    askQuestion(0);
-  }, [askQuestion, ttsSupported]);
+  }, [ttsSupported]);
 
   const handleToggleMic = useCallback(() => {
     if (isListening) {
@@ -206,6 +305,40 @@ function SessionRoom() {
     });
   }, [cancelSpeech]);
 
+  const handleConfirmEnd = useCallback(async () => {
+    setEndModalOpen(false);
+    speechCleanupRef.current?.();
+    cancelSpeech();
+    stopListening();
+    closeSocket();
+    setActiveSpeaker(null);
+    setWaitingForAnswer(false);
+    setServerThinking(false);
+
+    if (sessionId) {
+      try {
+        const res = await fetch(`/api/v1/sessions/${sessionId}/end`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ reason: "user_abandoned" }),
+        });
+        const data = await res.json();
+        if (data?.success && data.data) {
+          setScores({
+            clarity: data.data.clarity ?? BASELINE_SCORES.clarity,
+            confidence: data.data.confidence ?? BASELINE_SCORES.confidence,
+            structure: data.data.structure ?? BASELINE_SCORES.structure,
+          });
+          setQuestionCount(data.data.question_count ?? questionCount);
+        }
+      } catch {
+        /* show the results screen with whatever scores we already have */
+      }
+    }
+
+    setEnded(true);
+  }, [sessionId, cancelSpeech, stopListening, closeSocket, questionCount]);
+
   const canRespond = started && !ended && !paused && waitingForAnswer && !isListening;
   const micDisabled = !started || ended || paused || (!waitingForAnswer && !isListening);
   const waveActive = isListening || activeSpeaker !== null;
@@ -223,6 +356,8 @@ function SessionRoom() {
   } else if (activeSpeaker !== null) {
     status = `${panelists[activeSpeaker]?.name ?? "Panelist"} is speaking…`;
     statusVariant = "panelist";
+  } else if (serverThinking) {
+    status = "Panel is reviewing your answer…";
   } else if (waitingForAnswer) {
     status = "Your turn — respond when ready";
   }
@@ -243,8 +378,14 @@ function SessionRoom() {
         onEndSession={() => setEndModalOpen(true)}
       />
 
-      <ScorePanel scores={scores} started={answeredCount > 0} />
-      <QuestionCounter count={answeredCount} />
+      <ScorePanel scores={scores} started={questionCount > 0} />
+      <QuestionCounter count={questionCount} />
+
+      {serverNotice && (
+        <div className="pointer-events-none absolute top-4 left-1/2 z-120 -translate-x-1/2 border-2 border-ink bg-sienna px-4 py-2 font-grotesk text-xs font-bold text-white shadow-[3px_3px_0_#1A1109]">
+          {serverNotice}
+        </div>
+      )}
 
       <BottomControls
         status={status}
@@ -272,10 +413,10 @@ function SessionRoom() {
       <EndSessionModal
         open={endModalOpen}
         onCancel={() => setEndModalOpen(false)}
-        onConfirm={completeSession}
+        onConfirm={handleConfirmEnd}
       />
 
-      {!started && (
+      {!started && !fatalError && (
         <StartOverlay
           scenarioLabel={SCENARIO_META[scenario].label}
           topicLabel={topic}
@@ -314,6 +455,24 @@ function SessionRoom() {
                 <span className="font-grotesk text-lg font-bold text-sienna">{scores.structure}%</span>
               </div>
             </div>
+            <button
+              type="button"
+              onClick={() => router.push("/dashboard")}
+              className="neu-press w-full border-2 border-ink bg-sienna px-6 py-4 font-grotesk text-sm font-bold tracking-wider text-white uppercase shadow-[5px_5px_0_#1A1109]"
+            >
+              Back to dashboard
+            </button>
+          </div>
+        </div>
+      )}
+
+      {fatalError && (
+        <div className="pointer-events-auto absolute inset-0 z-130 flex items-center justify-center bg-ink/85 p-4 text-center">
+          <div className="w-full max-w-md border-3 border-ink bg-cream px-8 py-10 shadow-[8px_8px_0_#1A1109]">
+            <span className="mb-4 inline-block border border-ink bg-sienna px-3 py-1 font-grotesk text-2xs font-bold tracking-[0.08em] text-white uppercase">
+              Session error
+            </span>
+            <h1 className="mb-6 font-grotesk text-xl font-bold text-ink sm:text-2xl">{fatalError}</h1>
             <button
               type="button"
               onClick={() => router.push("/dashboard")}

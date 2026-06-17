@@ -88,6 +88,47 @@ export async function backendFetch(path: string, init?: RequestInit): Promise<Re
   });
 }
 
+/** Build a ws(s):// URL pointing at the backend, mirroring its http(s) scheme. */
+export function backendWsUrl(path: string): string {
+  return `${BACKEND_URL.replace(/^http/, "ws")}${path}`;
+}
+
+/** Exchange a refresh token for a new access/refresh token pair, or null on failure. */
+async function refreshTokens(
+  refreshToken: string,
+): Promise<{ access_token: string; refresh_token: string } | null> {
+  const refreshUpstream = await backendFetch("/api/v1/auth/refresh", {
+    method: "POST",
+    body: JSON.stringify({ refresh_token: refreshToken }),
+  });
+  const refreshData = await refreshUpstream.json();
+
+  if (!refreshData.success || !refreshData.data?.access_token) return null;
+  return refreshData.data as { access_token: string; refresh_token: string };
+}
+
+/**
+ * Resolve a usable access token from cookies, refreshing via the refresh
+ * token cookie if the access token cookie is missing entirely. Does not
+ * validate an existing access token's freshness — callers that need that
+ * should attempt the request and handle a 401/4401 themselves.
+ */
+export async function ensureAccessToken(request: NextRequest): Promise<
+  | { ok: true; accessToken: string; refreshedTokens?: { access_token: string; refresh_token: string } }
+  | { ok: false }
+> {
+  const accessToken = request.cookies.get("ss_access")?.value;
+  if (accessToken) return { ok: true, accessToken };
+
+  const refreshToken = request.cookies.get("ss_refresh")?.value;
+  if (!refreshToken) return { ok: false };
+
+  const refreshedTokens = await refreshTokens(refreshToken);
+  if (!refreshedTokens) return { ok: false };
+
+  return { ok: true, accessToken: refreshedTokens.access_token, refreshedTokens };
+}
+
 export type AuthedFetchResult =
   | { ok: true; response: Response; refreshedTokens?: { access_token: string; refresh_token: string } }
   | { ok: false; reason: "no_refresh_token" | "refresh_failed" };
@@ -122,20 +163,11 @@ export async function authedBackendFetch(
     return { ok: false, reason: "no_refresh_token" };
   }
 
-  const refreshUpstream = await backendFetch("/api/v1/auth/refresh", {
-    method: "POST",
-    body: JSON.stringify({ refresh_token: refreshToken }),
-  });
-  const refreshData = await refreshUpstream.json();
-
-  if (!refreshData.success || !refreshData.data?.access_token) {
+  const refreshedTokens = await refreshTokens(refreshToken);
+  if (!refreshedTokens) {
     return { ok: false, reason: "refresh_failed" };
   }
 
-  const refreshedTokens = refreshData.data as {
-    access_token: string;
-    refresh_token: string;
-  };
   const response = await attempt(refreshedTokens.access_token);
 
   return { ok: true, response, refreshedTokens };

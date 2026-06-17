@@ -119,10 +119,20 @@ function NewSessionWizard({ user }: NewSessionWizardProps) {
         return;
       }
 
+      const createdPanelists = (data.data.panelists ?? []).map(
+        (panelist: { id: string; name: string; role: string; strictness: number; inquisitiveness: number }) => ({
+          id: panelist.id,
+          name: panelist.name,
+          role: panelist.role,
+          strict: panelist.strictness,
+          inquisitive: panelist.inquisitiveness,
+        }),
+      );
+
       window.localStorage.setItem("ss_session_id", data.data.id);
       window.localStorage.setItem("ss_scenario", selectedScenario ?? DEFAULT_SCENARIO);
       window.localStorage.setItem("ss_topic", topic.trim() || DEFAULT_TOPIC);
-      window.localStorage.setItem("ss_panelists", JSON.stringify(sessionPanelists));
+      window.localStorage.setItem("ss_panelists", JSON.stringify(createdPanelists));
       if (document) {
         window.localStorage.setItem("ss_document_name", document.name);
       } else {

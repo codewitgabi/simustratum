@@ -49,6 +49,8 @@ export function useSessionSpeech() {
   const [interimTranscript, setInterimTranscript] = useState("");
 
   const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const finalTranscriptRef = useRef("");
+  const onFinalResultRef = useRef<((text: string) => void) | null>(null);
 
   useEffect(() => {
     if (!ttsSupported) return;
@@ -142,29 +144,41 @@ export function useSessionSpeech() {
     const recognition = new Ctor();
     recognition.lang = "en-US";
     recognition.interimResults = true;
-    recognition.continuous = false;
+    // Keep listening through natural pauses between sentences — the user
+    // decides when they're done by tapping the mic again (stopListening),
+    // not the recognizer's own silence detection.
+    recognition.continuous = true;
+
+    finalTranscriptRef.current = "";
+    onFinalResultRef.current = onFinalResult;
 
     recognition.onresult = (event) => {
       let interim = "";
-      let final = "";
 
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const result = event.results[i];
-        if (result.isFinal) final += result[0].transcript;
-        else interim += result[0].transcript;
+        if (result.isFinal) {
+          finalTranscriptRef.current = `${finalTranscriptRef.current} ${result[0].transcript}`.trim();
+        } else {
+          interim += result[0].transcript;
+        }
       }
 
-      if (interim) setInterimTranscript(interim);
-      if (final.trim()) onFinalResult(final.trim());
+      setInterimTranscript(interim);
     };
 
+    // onend always fires after the session ends, whether it stopped
+    // naturally, was aborted, or errored — so flushing here (rather than
+    // per-result) is what makes the full answer survive mid-speech pauses.
     recognition.onend = () => {
       setIsListening(false);
       setInterimTranscript("");
+      const text = finalTranscriptRef.current.trim();
+      finalTranscriptRef.current = "";
+      if (text) onFinalResultRef.current?.(text);
     };
     recognition.onerror = () => {
-      setIsListening(false);
-      setInterimTranscript("");
+      /* onend follows and handles cleanup/flushing */
     };
 
     recognitionRef.current = recognition;
