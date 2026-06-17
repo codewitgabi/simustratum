@@ -42,8 +42,8 @@ type SessionDisplay = {
   meta: string;
   score: number;
   scoreClass: string;
-  statusLabel: string | null;
-  statusDotClass: string | null;
+  statusLabel: string;
+  statusDotClass: string;
 };
 
 function scoreClassFor(score: number): string {
@@ -52,7 +52,7 @@ function scoreClassFor(score: number): string {
   return "text-green bg-green/20";
 }
 
-function statusBadgeFor(status: ApiSessionStatus): { label: string; dotClass: string } | null {
+function statusBadgeFor(status: ApiSessionStatus): { label: string; dotClass: string } {
   switch (status) {
     case "pending":
       return { label: "Not started", dotClass: "bg-camel" };
@@ -61,7 +61,7 @@ function statusBadgeFor(status: ApiSessionStatus): { label: string; dotClass: st
     case "abandoned":
       return { label: "Abandoned", dotClass: "bg-red-500" };
     case "completed":
-      return null;
+      return { label: "Completed", dotClass: "bg-green" };
   }
 }
 
@@ -77,8 +77,8 @@ function toDisplaySession(session: ApiSession): SessionDisplay {
     meta: formatRelativeTime(session.created_at),
     score: session.score,
     scoreClass: scoreClassFor(session.score),
-    statusLabel: badge?.label ?? null,
-    statusDotClass: badge?.dotClass ?? null,
+    statusLabel: badge.label,
+    statusDotClass: badge.dotClass,
   };
 }
 

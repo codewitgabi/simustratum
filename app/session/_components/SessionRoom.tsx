@@ -320,7 +320,7 @@ function SessionRoom() {
         const res = await fetch(`/api/v1/sessions/${sessionId}/end`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ reason: "user_abandoned" }),
+          body: JSON.stringify({ reason: "completed" }),
         });
         const data = await res.json();
         if (data?.success && data.data) {
