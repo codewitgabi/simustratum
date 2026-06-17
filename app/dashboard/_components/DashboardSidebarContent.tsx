@@ -19,11 +19,14 @@ import LogoutButton from "./LogoutButton";
 const SESSIONS_PAGE_LIMIT = 20;
 const SCROLL_LOAD_THRESHOLD = 60;
 
+type ApiSessionStatus = "pending" | "in_progress" | "completed" | "abandoned";
+
 type ApiSession = {
   id: string;
   title: string;
   scenario: string;
   score: number;
+  status: ApiSessionStatus;
   created_at: string;
 };
 
@@ -39,6 +42,8 @@ type SessionDisplay = {
   meta: string;
   score: number;
   scoreClass: string;
+  statusLabel: string | null;
+  statusDotClass: string | null;
 };
 
 function scoreClassFor(score: number): string {
@@ -47,9 +52,23 @@ function scoreClassFor(score: number): string {
   return "text-green bg-green/20";
 }
 
+function statusBadgeFor(status: ApiSessionStatus): { label: string; dotClass: string } | null {
+  switch (status) {
+    case "pending":
+      return { label: "Not started", dotClass: "bg-camel" };
+    case "in_progress":
+      return { label: "Live", dotClass: "bg-green blink" };
+    case "abandoned":
+      return { label: "Abandoned", dotClass: "bg-red-500" };
+    case "completed":
+      return null;
+  }
+}
+
 function toDisplaySession(session: ApiSession): SessionDisplay {
   const scenarioId = SCENARIO_FROM_API_VALUE[session.scenario];
   const icon = SCENARIO_META[scenarioId]?.icon ?? "❓";
+  const badge = statusBadgeFor(session.status);
 
   return {
     id: session.id,
@@ -58,6 +77,8 @@ function toDisplaySession(session: ApiSession): SessionDisplay {
     meta: formatRelativeTime(session.created_at),
     score: session.score,
     scoreClass: scoreClassFor(session.score),
+    statusLabel: badge?.label ?? null,
+    statusDotClass: badge?.dotClass ?? null,
   };
 }
 
