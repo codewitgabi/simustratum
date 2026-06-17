@@ -27,6 +27,10 @@ export const SCENARIO_API_VALUES: Record<ScenarioId, string> = {
   english: "english_proficiency",
 };
 
+export const SCENARIO_FROM_API_VALUE: Record<string, ScenarioId> = Object.fromEntries(
+  Object.entries(SCENARIO_API_VALUES).map(([id, value]) => [value, id as ScenarioId]),
+);
+
 export const SCENARIOS = [
   {
     id: "tutorial" as ScenarioId,
@@ -80,37 +84,6 @@ export const SCENARIOS = [
 
 export const PANELIST_BG = ["#FDEBD0", "#D5E8D4", "#DAE8FC"];
 
-export const RECENT_SESSIONS = [
-  {
-    icon: "🎓",
-    title: "Project Defense",
-    meta: "2 days ago · Score 82",
-    score: 82,
-    scoreClass: "text-green bg-green/20",
-  },
-  {
-    icon: "📝",
-    title: "Tutorial Practice",
-    meta: "4 days ago · Score 74",
-    score: 74,
-    scoreClass: "text-camel bg-camel/20",
-  },
-  {
-    icon: "🌍",
-    title: "English Proficiency",
-    meta: "1 week ago · Score 68",
-    score: 68,
-    scoreClass: "text-camel bg-camel/20",
-  },
-  {
-    icon: "✍️",
-    title: "Oral Examination",
-    meta: "2 weeks ago · Score 91",
-    score: 91,
-    scoreClass: "text-green bg-green/20",
-  },
-];
-
 export const NAV_ITEMS = [
   {
     label: "Dashboard",
@@ -118,13 +91,6 @@ export const NAV_ITEMS = [
     active: true,
     icon: "dashboard",
   },
-  {
-    label: "Session History",
-    href: "#",
-    active: false,
-    icon: "history",
-  },
-  { label: "Progress", href: "#", active: false, icon: "progress" },
   { label: "Settings", href: "#", active: false, icon: "settings" },
 ];
 

@@ -11,23 +11,27 @@ export type SessionUser = {
 };
 
 /**
- * Reject requests whose Origin header doesn't match the server's own host.
- * Returns a 403 response if the check fails, otherwise null.
+ * Reject requests whose Origin (or, for GET/HEAD, Referer) header doesn't
+ * match the server's own host. Browsers omit Origin on plain same-origin
+ * GET/HEAD fetches, so those fall back to Referer instead of being rejected
+ * outright. Returns a 403 response if the check fails, otherwise null.
  */
 export function enforceSameOrigin(request: NextRequest): NextResponse | null {
-  const origin = request.headers.get("origin");
   const host = request.headers.get("host");
+  const origin = request.headers.get("origin");
+  const forbidden = NextResponse.json({ success: false, message: "Forbidden" }, { status: 403 });
 
-  if (!origin || !host) {
-    return NextResponse.json({ success: false, message: "Forbidden" }, { status: 403 });
-  }
+  if (!host) return forbidden;
+
+  const isSafeMethod = request.method === "GET" || request.method === "HEAD";
+  const sourceUrl = origin ?? (isSafeMethod ? request.headers.get("referer") : null);
+
+  if (!sourceUrl) return forbidden;
 
   try {
-    if (new URL(origin).host !== host) {
-      return NextResponse.json({ success: false, message: "Forbidden" }, { status: 403 });
-    }
+    if (new URL(sourceUrl).host !== host) return forbidden;
   } catch {
-    return NextResponse.json({ success: false, message: "Forbidden" }, { status: 403 });
+    return forbidden;
   }
 
   return null;
