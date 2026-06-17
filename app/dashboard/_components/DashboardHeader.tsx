@@ -1,13 +1,16 @@
 "use client";
 
+import { getInitials, type SessionUser } from "@/lib/auth";
 import { useDashboardNav } from "./DashboardNavProvider";
 
 type DashboardHeaderProps = {
   currentStep: number;
+  user: SessionUser | null;
 };
 
-function DashboardHeader({ currentStep }: DashboardHeaderProps) {
+function DashboardHeader({ currentStep, user }: DashboardHeaderProps) {
   const { toggle } = useDashboardNav();
+  const initials = user ? getInitials(user.full_name) : "?";
 
   const dotClass = (step: number) => {
     if (step < currentStep) return "step-dot done";
@@ -59,8 +62,11 @@ function DashboardHeader({ currentStep }: DashboardHeaderProps) {
         </div>
       </div>
 
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center border-2 border-ink bg-sienna font-grotesk text-[0.75rem] font-bold text-white shadow-[2px_2px_0_#1A1109]">
-        AO
+      <div
+        className="flex h-8 w-8 shrink-0 items-center justify-center border-2 border-ink bg-sienna font-grotesk text-[0.75rem] font-bold text-white shadow-[2px_2px_0_#1A1109]"
+        title={user?.full_name}
+      >
+        {initials}
       </div>
     </header>
   );

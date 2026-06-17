@@ -8,6 +8,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import type { SessionUser } from "@/lib/auth";
 import DashboardSidebarContent from "./DashboardSidebarContent";
 
 type DashboardNavContextValue = {
@@ -16,9 +17,7 @@ type DashboardNavContextValue = {
   close: () => void;
 };
 
-const DashboardNavContext = createContext<DashboardNavContextValue | null>(
-  null,
-);
+const DashboardNavContext = createContext<DashboardNavContextValue | null>(null);
 
 export function useDashboardNav() {
   const ctx = useContext(DashboardNavContext);
@@ -30,9 +29,10 @@ export function useDashboardNav() {
 
 type DashboardNavProviderProps = {
   children: ReactNode;
+  user: SessionUser | null;
 };
 
-function DashboardNavProvider({ children }: DashboardNavProviderProps) {
+function DashboardNavProvider({ children, user }: DashboardNavProviderProps) {
   const [open, setOpen] = useState(false);
 
   const close = useCallback(() => setOpen(false), []);
@@ -66,7 +66,7 @@ function DashboardNavProvider({ children }: DashboardNavProviderProps) {
             onClick={close}
           />
           <aside className="absolute top-0 left-0 flex h-full w-[min(280px,85vw)] flex-col overflow-y-auto border-r-2 border-ink bg-ink shadow-neu-lg">
-            <DashboardSidebarContent onNavigate={close} showClose />
+            <DashboardSidebarContent user={user} onNavigate={close} showClose />
           </aside>
         </div>
       )}

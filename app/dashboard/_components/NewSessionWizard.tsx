@@ -3,6 +3,7 @@
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { ScenarioId } from "@/lib/dashboard-data";
+import type { SessionUser } from "@/lib/auth";
 import { createId } from "@/lib/dashboard-utils";
 import { DEFAULT_SCENARIO, DEFAULT_TOPIC } from "@/lib/session-data";
 import DashboardHeader from "./DashboardHeader";
@@ -24,7 +25,11 @@ function createPanelist(): Panelist {
   };
 }
 
-function NewSessionWizard() {
+type NewSessionWizardProps = {
+  user: SessionUser | null;
+};
+
+function NewSessionWizard({ user }: NewSessionWizardProps) {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [selectedScenario, setSelectedScenario] = useState<ScenarioId | null>(
@@ -88,7 +93,7 @@ function NewSessionWizard() {
 
   return (
     <div className="flex min-h-screen min-w-0 flex-1 flex-col overflow-x-clip">
-      <DashboardHeader currentStep={step} />
+      <DashboardHeader currentStep={step} user={user} />
       <StepTabs currentStep={step} onStepClick={goToStep} />
 
       {step === 1 && (

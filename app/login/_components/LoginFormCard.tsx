@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { FormEvent, useState } from "react";
+import { useRouter } from "next/navigation";
 import GoogleSignInButton from "@/components/GoogleSignInButton";
 import RememberMeCheckbox from "./RememberMeCheckbox";
 
@@ -33,11 +34,16 @@ function EyeOffIcon() {
 }
 
 function LoginFormCard() {
+  const router = useRouter();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [visible, setVisible] = useState(false);
   const [emailError, setEmailError] = useState(false);
   const [passwordError, setPasswordError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(
+    "Incorrect email or password. Check your details and try again.",
+  );
   const [showBanner, setShowBanner] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -59,12 +65,11 @@ function LoginFormCard() {
     if (showBanner) setShowBanner(false);
   }
 
-  function handleSubmit(e: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     clearFieldErrors();
 
     let valid = true;
-
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
       setEmailError(true);
       valid = false;
@@ -73,15 +78,35 @@ function LoginFormCard() {
       setPasswordError(true);
       valid = false;
     }
-
     if (!valid) return;
 
     setLoading(true);
+    try {
+      const res = await fetch("/api/v1/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim(), password }),
+      });
 
-    setTimeout(() => {
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        setErrorMessage(
+          res.status === 401 || res.status === 400
+            ? "Incorrect email or password. Check your details and try again."
+            : (data.message ?? "Something went wrong. Please try again."),
+        );
+        setShowBanner(true);
+        return;
+      }
+
+      router.push("/dashboard");
+    } catch {
+      setErrorMessage("Something went wrong. Please try again.");
       setShowBanner(true);
+    } finally {
       setLoading(false);
-    }, 1800);
+    }
   }
 
   return (
@@ -197,26 +222,12 @@ function LoginFormCard() {
               fill="none"
               aria-hidden
             >
-              <circle
-                cx="7.5"
-                cy="7.5"
-                r="6.5"
-                stroke="#EF4444"
-                strokeWidth="1.5"
-              />
-              <line
-                x1="7.5"
-                y1="4"
-                x2="7.5"
-                y2="8.5"
-                stroke="#EF4444"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
+              <circle cx="7.5" cy="7.5" r="6.5" stroke="#EF4444" strokeWidth="1.5" />
+              <line x1="7.5" y1="4" x2="7.5" y2="8.5" stroke="#EF4444" strokeWidth="1.5" strokeLinecap="round" />
               <circle cx="7.5" cy="11" r="0.8" fill="#EF4444" />
             </svg>
             <p className="font-inter text-[0.78rem] leading-snug text-red-700">
-              Incorrect email or password. Check your details and try again.
+              {errorMessage}
             </p>
           </div>
         )}
@@ -228,13 +239,7 @@ function LoginFormCard() {
         >
           <span>{loading ? "Signing in…" : "Sign in"}</span>
           {!loading && (
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 14 14"
-              fill="none"
-              aria-hidden
-            >
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
               <path
                 d="M2 7h10M8 3l4 4-4 4"
                 stroke="white"
@@ -253,19 +258,8 @@ function LoginFormCard() {
               fill="none"
               aria-hidden
             >
-              <circle
-                cx="8"
-                cy="8"
-                r="6"
-                stroke="rgba(255,255,255,0.3)"
-                strokeWidth="2"
-              />
-              <path
-                d="M8 2a6 6 0 0 1 6 6"
-                stroke="white"
-                strokeWidth="2"
-                strokeLinecap="round"
-              />
+              <circle cx="8" cy="8" r="6" stroke="rgba(255,255,255,0.3)" strokeWidth="2" />
+              <path d="M8 2a6 6 0 0 1 6 6" stroke="white" strokeWidth="2" strokeLinecap="round" />
             </svg>
           )}
         </button>

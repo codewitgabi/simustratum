@@ -5,6 +5,7 @@ import {
   SIDEBAR_WIDTH_COLLAPSED,
   SIDEBAR_WIDTH_EXPANDED,
 } from "@/lib/dashboard-data";
+import type { SessionUser } from "@/lib/auth";
 import DashboardSidebarContent from "./DashboardSidebarContent";
 
 const STORAGE_KEY = "dashboard-sidebar-collapsed";
@@ -46,7 +47,11 @@ function subscribeCollapsed(onStoreChange: () => void) {
   };
 }
 
-function DashboardSidebar() {
+type DashboardSidebarProps = {
+  user: SessionUser | null;
+};
+
+function DashboardSidebar({ user }: DashboardSidebarProps) {
   const collapsed = useSyncExternalStore(
     subscribeCollapsed,
     readCollapsed,
@@ -67,7 +72,7 @@ function DashboardSidebar() {
         style={{ width }}
       >
         <aside className="flex h-full flex-col overflow-hidden border-r-2 border-ink bg-ink">
-          <DashboardSidebarContent collapsed={collapsed} />
+          <DashboardSidebarContent user={user} collapsed={collapsed} />
         </aside>
       </div>
 

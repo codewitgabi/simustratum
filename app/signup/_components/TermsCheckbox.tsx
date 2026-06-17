@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+type TermsCheckboxProps = {
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+};
 
-function TermsCheckbox() {
-  const [checked, setChecked] = useState(false);
-
+function TermsCheckbox({ checked, onChange }: TermsCheckboxProps) {
   return (
     <label className="group flex cursor-pointer items-start gap-3">
       <div className="relative mt-0.5 shrink-0">
@@ -12,7 +13,7 @@ function TermsCheckbox() {
           id="terms"
           type="checkbox"
           checked={checked}
-          onChange={(e) => setChecked(e.target.checked)}
+          onChange={(e) => onChange(e.target.checked)}
           className="peer sr-only"
         />
         <div
@@ -22,13 +23,7 @@ function TermsCheckbox() {
           ].join(" ")}
         >
           {checked && (
-            <svg
-              width="12"
-              height="12"
-              viewBox="0 0 12 12"
-              fill="none"
-              aria-hidden
-            >
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden>
               <path
                 d="M2 6l3 3 5-5"
                 stroke="white"

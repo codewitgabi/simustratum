@@ -45,11 +45,16 @@ function EyeOffIcon() {
   );
 }
 
-function PasswordField() {
-  const [visible, setVisible] = useState(false);
-  const [password, setPassword] = useState("");
+type PasswordFieldProps = {
+  value: string;
+  onChange: (value: string) => void;
+  error?: boolean;
+};
 
-  const level = password.length === 0 ? 0 : getStrength(password);
+function PasswordField({ value, onChange, error }: PasswordFieldProps) {
+  const [visible, setVisible] = useState(false);
+
+  const level = value.length === 0 ? 0 : getStrength(value);
   const activeLevel = level > 0 ? LEVELS[level - 1] : null;
 
   return (
@@ -66,9 +71,12 @@ function PasswordField() {
           type={visible ? "text" : "password"}
           placeholder="At least 8 characters"
           autoComplete="new-password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="neu-input w-full border-2 border-ink bg-cream px-4 py-3 pr-12 font-inter text-[0.9rem] text-ink placeholder:text-mid/50"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className={[
+            "neu-input w-full border-2 border-ink bg-cream px-4 py-3 pr-12 font-inter text-[0.9rem] text-ink placeholder:text-mid/50",
+            error ? "error" : "",
+          ].join(" ")}
         />
         <button
           type="button"
@@ -80,14 +88,14 @@ function PasswordField() {
         </button>
       </div>
 
-      <div className="mt-1 flex gap-1" aria-hidden={password.length === 0}>
+      <div className="mt-1 flex gap-1" aria-hidden={value.length === 0}>
         {Array.from({ length: 4 }).map((_, i) => (
           <div
             key={i}
             className="h-[3px] flex-1"
             style={{
               background:
-                password.length > 0 && i < level
+                value.length > 0 && i < level
                   ? (activeLevel?.color ?? "rgba(26,17,9,0.1)")
                   : "rgba(26,17,9,0.1)",
             }}
@@ -95,11 +103,8 @@ function PasswordField() {
         ))}
       </div>
 
-      {password.length > 0 && activeLevel && (
-        <p
-          className="font-inter text-[0.65rem] text-mid"
-          style={{ color: activeLevel.color }}
-        >
+      {value.length > 0 && activeLevel && (
+        <p className="font-inter text-[0.65rem]" style={{ color: activeLevel.color }}>
           {activeLevel.label}
         </p>
       )}

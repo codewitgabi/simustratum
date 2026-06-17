@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
+import GoogleOAuthProvider from "@/components/GoogleOAuthProvider";
 import "./globals.css";
 
 const inter = Inter({
@@ -34,7 +35,7 @@ function RootLayout({
       className={`${inter.variable} ${spaceGrotesk.variable}`}
     >
       <body className="overflow-x-hidden bg-cream font-inter text-ink">
-        {children}
+        <GoogleOAuthProvider>{children}</GoogleOAuthProvider>
       </body>
     </html>
   );

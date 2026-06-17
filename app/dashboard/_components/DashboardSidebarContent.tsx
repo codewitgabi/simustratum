@@ -2,20 +2,28 @@ import Link from "next/link";
 import MicIcon from "@/components/MicIcon";
 import SignupLogo from "@/components/SignupLogo";
 import { NAV_ITEMS, RECENT_SESSIONS } from "@/lib/dashboard-data";
+import { getInitials, type SessionUser } from "@/lib/auth";
 import RecentSessionItem from "./RecentSessionItem";
 import NavIcon from "./NavIcon";
+import LogoutButton from "./LogoutButton";
 
 type DashboardSidebarContentProps = {
+  user: SessionUser | null;
   collapsed?: boolean;
   onNavigate?: () => void;
   showClose?: boolean;
 };
 
 function DashboardSidebarContent({
+  user,
   collapsed = false,
   onNavigate,
   showClose = false,
 }: DashboardSidebarContentProps) {
+  const initials = user ? getInitials(user.full_name) : "?";
+  const displayName = user?.full_name ?? "Guest";
+  const displayEmail = user?.email ?? "";
+
   return (
     <div className="flex h-full min-h-0 flex-col">
       <div
@@ -50,13 +58,7 @@ function DashboardSidebarContent({
             className="flex h-8 w-8 items-center justify-center border-2 border-white/20 text-white/70 transition-colors hover:text-white"
             aria-label="Close menu"
           >
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 14 14"
-              fill="none"
-              aria-hidden
-            >
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
               <path
                 d="M2 2l10 10M12 2L2 12"
                 stroke="currentColor"
@@ -93,9 +95,7 @@ function DashboardSidebarContent({
                 : "border-transparent text-white/60",
             ].join(" ")}
           >
-            <span
-              className={`nav-icon shrink-0 ${item.active ? "" : "text-white/70"}`}
-            >
+            <span className={`nav-icon shrink-0 ${item.active ? "" : "text-white/70"}`}>
               <NavIcon type={item.icon} />
             </span>
             <span
@@ -142,41 +142,19 @@ function DashboardSidebarContent({
       >
         <div
           className="flex h-9 w-9 shrink-0 items-center justify-center border-2 border-camel/50 bg-sienna font-grotesk text-[0.82rem] font-bold text-white"
-          title={collapsed ? "Adaeze Okonkwo" : undefined}
+          title={collapsed ? displayName : undefined}
         >
-          AO
+          {initials}
         </div>
         {!collapsed && (
           <>
             <div className="min-w-0 flex-1">
               <p className="truncate font-grotesk text-[0.78rem] font-bold text-white">
-                Adaeze Okonkwo
+                {displayName}
               </p>
-              <p className="truncate text-2xs text-white/35">
-                adaeze@unilag.edu.ng
-              </p>
+              <p className="truncate text-2xs text-white/35">{displayEmail}</p>
             </div>
-            <button
-              type="button"
-              className="shrink-0 text-white/30 transition-colors hover:text-white/70"
-              aria-label="Sign out"
-            >
-              <svg
-                width="15"
-                height="15"
-                viewBox="0 0 15 15"
-                fill="none"
-                aria-hidden
-              >
-                <path
-                  d="M6 2H3a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h3M10 11l4-4-4-4M14 7.5H6"
-                  stroke="currentColor"
-                  strokeWidth="1.4"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </button>
+            <LogoutButton />
           </>
         )}
       </div>
