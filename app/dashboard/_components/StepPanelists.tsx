@@ -22,6 +22,7 @@ function StepPanelists({
   onNext,
 }: StepPanelistsProps) {
   const atMax = panelists.length >= maxPanelists;
+  const canProceed = Boolean(panelists[0]?.name.trim());
 
   return (
     <div className="step-animate px-4 pt-5 pb-8 sm:px-6 sm:pt-7 sm:pb-10 lg:px-8">
@@ -72,6 +73,12 @@ function StepPanelists({
         ))}
       </div>
 
+      {!canProceed && (
+        <p className="mb-4 text-[0.78rem] font-bold text-sienna">
+          The first panelist needs a name before you can continue.
+        </p>
+      )}
+
       <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
         <button
           type="button"
@@ -98,6 +105,7 @@ function StepPanelists({
         <button
           type="button"
           onClick={onNext}
+          disabled={!canProceed}
           className="neu-press inline-flex w-full cursor-pointer items-center justify-center gap-2 border-2 border-ink bg-sienna px-7 py-3.5 font-grotesk text-[0.9rem] font-bold text-white shadow-neu-md sm:w-auto"
         >
           Review session

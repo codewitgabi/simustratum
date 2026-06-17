@@ -83,3 +83,56 @@ export async function backendFetch(path: string, init?: RequestInit): Promise<Re
     headers: { "Content-Type": "application/json", ...init?.headers },
   });
 }
+
+export type AuthedFetchResult =
+  | { ok: true; response: Response; refreshedTokens?: { access_token: string; refresh_token: string } }
+  | { ok: false; reason: "no_refresh_token" | "refresh_failed" };
+
+/**
+ * Forward a JSON request to the backend with the access token attached.
+ * On a 401, transparently refreshes using the refresh token cookie and
+ * retries once. Callers should set the returned `refreshedTokens` on the
+ * response cookies, or clear auth cookies entirely when `ok` is false.
+ */
+export async function authedBackendFetch(
+  request: NextRequest,
+  path: string,
+  init?: RequestInit,
+): Promise<AuthedFetchResult> {
+  const attempt = (token: string) =>
+    backendFetch(path, {
+      ...init,
+      headers: { ...init?.headers, Authorization: `Bearer ${token}` },
+    });
+
+  const accessToken = request.cookies.get("ss_access")?.value;
+  if (accessToken) {
+    const response = await attempt(accessToken);
+    if (response.status !== 401) {
+      return { ok: true, response };
+    }
+  }
+
+  const refreshToken = request.cookies.get("ss_refresh")?.value;
+  if (!refreshToken) {
+    return { ok: false, reason: "no_refresh_token" };
+  }
+
+  const refreshUpstream = await backendFetch("/api/v1/auth/refresh", {
+    method: "POST",
+    body: JSON.stringify({ refresh_token: refreshToken }),
+  });
+  const refreshData = await refreshUpstream.json();
+
+  if (!refreshData.success || !refreshData.data?.access_token) {
+    return { ok: false, reason: "refresh_failed" };
+  }
+
+  const refreshedTokens = refreshData.data as {
+    access_token: string;
+    refresh_token: string;
+  };
+  const response = await attempt(refreshedTokens.access_token);
+
+  return { ok: true, response, refreshedTokens };
+}

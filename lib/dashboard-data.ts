@@ -18,6 +18,15 @@ export const SCENARIO_META: Record<
   english: { label: "English Proficiency", icon: "🌍" },
 };
 
+export const SCENARIO_API_VALUES: Record<ScenarioId, string> = {
+  tutorial: "tutorial_practice",
+  presentation: "presentation",
+  defense: "project_defense",
+  oral: "oral_examination",
+  seminar: "seminar_defense",
+  english: "english_proficiency",
+};
+
 export const SCENARIOS = [
   {
     id: "tutorial" as ScenarioId,

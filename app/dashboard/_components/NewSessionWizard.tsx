@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { ScenarioId } from "@/lib/dashboard-data";
+import { SCENARIO_API_VALUES, type ScenarioId } from "@/lib/dashboard-data";
 import type { SessionUser } from "@/lib/auth";
 import { createId } from "@/lib/dashboard-utils";
 import { DEFAULT_SCENARIO, DEFAULT_TOPIC } from "@/lib/session-data";
@@ -36,6 +36,7 @@ function NewSessionWizard({ user }: NewSessionWizardProps) {
     null,
   );
   const [topic, setTopic] = useState("");
+  const [document, setDocument] = useState<File | null>(null);
   const [panelists, setPanelists] = useState<Panelist[]>([createPanelist()]);
   const [options, setOptions] = useState<SessionOptions>({
     feedback: true,
@@ -43,14 +44,16 @@ function NewSessionWizard({ user }: NewSessionWizardProps) {
     transcript: true,
   });
   const [launching, setLaunching] = useState(false);
+  const [launchError, setLaunchError] = useState<string | null>(null);
 
   const goToStep = useCallback(
     (n: number) => {
-      if (n === 2 && !selectedScenario) return;
+      if (n >= 2 && (!selectedScenario || !topic.trim())) return;
+      if (n >= 3 && !panelists[0]?.name.trim()) return;
       setStep(n);
       window.scrollTo({ top: 0, behavior: "smooth" });
     },
-    [selectedScenario],
+    [selectedScenario, topic, panelists],
   );
 
   const handleAddPanelist = () => {
@@ -72,23 +75,65 @@ function NewSessionWizard({ user }: NewSessionWizardProps) {
     setOptions((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const handleBeginSession = () => {
+  const handleBeginSession = async () => {
+    if (!selectedScenario || !topic.trim() || !panelists[0]?.name.trim()) {
+      setLaunchError("Please fill in the topic and at least one panelist name.");
+      return;
+    }
+
     setLaunching(true);
+    setLaunchError(null);
 
     const sessionPanelists = panelists.map((panelist, index) => ({
       name: panelist.name.trim() || `Panelist ${index + 1}`,
       role: panelist.role.trim() || "Panelist",
-      strict: panelist.strict,
-      inquisitive: panelist.inquisitive,
+      strictness: panelist.strict,
+      inquisitiveness: panelist.inquisitive,
     }));
 
-    window.localStorage.setItem("ss_scenario", selectedScenario ?? DEFAULT_SCENARIO);
-    window.localStorage.setItem("ss_topic", topic.trim() || DEFAULT_TOPIC);
-    window.localStorage.setItem("ss_panelists", JSON.stringify(sessionPanelists));
+    try {
+      const res = await fetch("/api/v1/sessions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          scenario: SCENARIO_API_VALUES[selectedScenario],
+          topic: topic.trim(),
+          document_id: null,
+          panelists: sessionPanelists,
+          real_time_feedback: options.feedback,
+          answer_timer: options.timer,
+          save_transcript: options.transcript,
+        }),
+      });
 
-    setTimeout(() => {
+      const data = await res.json();
+
+      if (data.logged_out) {
+        router.push("/login");
+        return;
+      }
+
+      if (!res.ok || !data.success) {
+        setLaunchError(data.message ?? "Couldn't create the session. Try again.");
+        setLaunching(false);
+        return;
+      }
+
+      window.localStorage.setItem("ss_session_id", data.data.id);
+      window.localStorage.setItem("ss_scenario", selectedScenario ?? DEFAULT_SCENARIO);
+      window.localStorage.setItem("ss_topic", topic.trim() || DEFAULT_TOPIC);
+      window.localStorage.setItem("ss_panelists", JSON.stringify(sessionPanelists));
+      if (document) {
+        window.localStorage.setItem("ss_document_name", document.name);
+      } else {
+        window.localStorage.removeItem("ss_document_name");
+      }
+
       router.push("/session");
-    }, 1800);
+    } catch {
+      setLaunchError("Couldn't reach the server. Check your connection and try again.");
+      setLaunching(false);
+    }
   };
 
   return (
@@ -100,8 +145,10 @@ function NewSessionWizard({ user }: NewSessionWizardProps) {
         <StepScenario
           selectedScenario={selectedScenario}
           topic={topic}
+          document={document}
           onSelectScenario={setSelectedScenario}
           onTopicChange={setTopic}
+          onDocumentChange={setDocument}
           onNext={() => goToStep(2)}
         />
       )}
@@ -122,9 +169,11 @@ function NewSessionWizard({ user }: NewSessionWizardProps) {
         <StepReady
           selectedScenario={selectedScenario}
           topic={topic}
+          document={document}
           panelists={panelists}
           options={options}
           launching={launching}
+          launchError={launchError}
           onToggleOption={toggleOption}
           onEditScenario={() => goToStep(1)}
           onEditPanelists={() => goToStep(2)}

@@ -34,9 +34,11 @@ export type SessionOptions = {
 type StepReadyProps = {
   selectedScenario: ScenarioId | null;
   topic: string;
+  document: File | null;
   panelists: Panelist[];
   options: SessionOptions;
   launching: boolean;
+  launchError: string | null;
   onToggleOption: (key: keyof SessionOptions) => void;
   onEditScenario: () => void;
   onEditPanelists: () => void;
@@ -47,9 +49,11 @@ type StepReadyProps = {
 function StepReady({
   selectedScenario,
   topic,
+  document,
   panelists,
   options,
   launching,
+  launchError,
   onToggleOption,
   onEditScenario,
   onEditPanelists,
@@ -97,6 +101,11 @@ function StepReady({
                 <p className="text-[0.78rem] wrap-break-word text-mid">
                   {topic.trim() || "No topic entered"}
                 </p>
+                {document && (
+                  <p className="mt-1 truncate text-[0.72rem] font-bold text-sienna">
+                    📎 {document.name}
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -238,6 +247,12 @@ function StepReady({
               </p>
             </div>
           </div>
+
+          {launchError && (
+            <p className="border-2 border-sienna bg-pale px-4 py-3 text-[0.8rem] font-bold text-sienna">
+              {launchError}
+            </p>
+          )}
 
           <button
             type="button"
