@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { SCENARIO_API_VALUES, type ScenarioId } from "@/lib/dashboard-data";
 import type { SessionUser } from "@/lib/auth";
@@ -9,7 +9,7 @@ import { DEFAULT_SCENARIO, DEFAULT_TOPIC } from "@/lib/session-data";
 import DashboardHeader from "./DashboardHeader";
 import StepPanelists from "./StepPanelists";
 import StepReady, { type SessionOptions } from "./StepReady";
-import StepScenario from "./StepScenario";
+import StepScenario, { type DocumentStatus } from "./StepScenario";
 import StepTabs from "./StepTabs";
 import type { Panelist } from "./PanelistCard";
 
@@ -37,6 +37,10 @@ function NewSessionWizard({ user }: NewSessionWizardProps) {
   );
   const [topic, setTopic] = useState("");
   const [document, setDocument] = useState<File | null>(null);
+  const [documentId, setDocumentId] = useState<string | null>(null);
+  const [documentStatus, setDocumentStatus] = useState<DocumentStatus>("idle");
+  const [documentError, setDocumentError] = useState<string | null>(null);
+  const activeUploadRef = useRef<File | null>(null);
   const [panelists, setPanelists] = useState<Panelist[]>([createPanelist()]);
   const [options, setOptions] = useState<SessionOptions>({
     feedback: true,
@@ -75,9 +79,65 @@ function NewSessionWizard({ user }: NewSessionWizardProps) {
     setOptions((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
+  const handleDocumentChange = useCallback(
+    async (file: File | null) => {
+      activeUploadRef.current = file;
+      setDocument(file);
+      setDocumentId(null);
+      setDocumentError(null);
+
+      if (!file) {
+        setDocumentStatus("idle");
+        return;
+      }
+
+      setDocumentStatus("uploading");
+
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const res = await fetch("/api/v1/documents", { method: "POST", body: formData });
+        const data = await res.json();
+
+        if (activeUploadRef.current !== file) return;
+
+        if (data.logged_out) {
+          router.push("/login");
+          return;
+        }
+
+        if (!res.ok || !data.success) {
+          setDocumentStatus("failed");
+          setDocumentError(data.message ?? "Couldn't upload the document.");
+          return;
+        }
+
+        if (data.data.status === "failed") {
+          setDocumentStatus("failed");
+          setDocumentError(data.data.error_message ?? "Document processing failed.");
+          return;
+        }
+
+        setDocumentId(data.data.id);
+        setDocumentStatus("ready");
+      } catch {
+        if (activeUploadRef.current !== file) return;
+        setDocumentStatus("failed");
+        setDocumentError("Couldn't reach the server. Try again.");
+      }
+    },
+    [router],
+  );
+
   const handleBeginSession = async () => {
     if (!selectedScenario || !topic.trim() || !panelists[0]?.name.trim()) {
       setLaunchError("Please fill in the topic and at least one panelist name.");
+      return;
+    }
+
+    if (document && documentStatus === "uploading") {
+      setLaunchError("Please wait for the document to finish uploading, or remove it.");
       return;
     }
 
@@ -98,7 +158,7 @@ function NewSessionWizard({ user }: NewSessionWizardProps) {
         body: JSON.stringify({
           scenario: SCENARIO_API_VALUES[selectedScenario],
           topic: topic.trim(),
-          document_id: null,
+          document_id: documentId,
           panelists: sessionPanelists,
           real_time_feedback: options.feedback,
           answer_timer: options.timer,
@@ -156,9 +216,11 @@ function NewSessionWizard({ user }: NewSessionWizardProps) {
           selectedScenario={selectedScenario}
           topic={topic}
           document={document}
+          documentStatus={documentStatus}
+          documentError={documentError}
           onSelectScenario={setSelectedScenario}
           onTopicChange={setTopic}
-          onDocumentChange={setDocument}
+          onDocumentChange={handleDocumentChange}
           onNext={() => goToStep(2)}
         />
       )}

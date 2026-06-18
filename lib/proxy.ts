@@ -134,22 +134,15 @@ export type AuthedFetchResult =
   | { ok: false; reason: "no_refresh_token" | "refresh_failed" };
 
 /**
- * Forward a JSON request to the backend with the access token attached.
- * On a 401, transparently refreshes using the refresh token cookie and
- * retries once. Callers should set the returned `refreshedTokens` on the
- * response cookies, or clear auth cookies entirely when `ok` is false.
+ * Run an authenticated backend request via `attempt(token)`. On a 401,
+ * transparently refreshes using the refresh token cookie and retries once.
+ * Callers should set the returned `refreshedTokens` on the response
+ * cookies, or clear auth cookies entirely when `ok` is false.
  */
-export async function authedBackendFetch(
+async function authedFetch(
   request: NextRequest,
-  path: string,
-  init?: RequestInit,
+  attempt: (token: string) => Promise<Response>,
 ): Promise<AuthedFetchResult> {
-  const attempt = (token: string) =>
-    backendFetch(path, {
-      ...init,
-      headers: { ...init?.headers, Authorization: `Bearer ${token}` },
-    });
-
   const accessToken = request.cookies.get("ss_access")?.value;
   if (accessToken) {
     const response = await attempt(accessToken);
@@ -171,4 +164,33 @@ export async function authedBackendFetch(
   const response = await attempt(refreshedTokens.access_token);
 
   return { ok: true, response, refreshedTokens };
+}
+
+/** Forward a JSON request to the backend with the access token attached. */
+export async function authedBackendFetch(
+  request: NextRequest,
+  path: string,
+  init?: RequestInit,
+): Promise<AuthedFetchResult> {
+  return authedFetch(request, (token) =>
+    backendFetch(path, {
+      ...init,
+      headers: { ...init?.headers, Authorization: `Bearer ${token}` },
+    }),
+  );
+}
+
+/** Forward a multipart/form-data request to the backend with the access token attached. */
+export async function authedBackendFetchForm(
+  request: NextRequest,
+  path: string,
+  formData: FormData,
+): Promise<AuthedFetchResult> {
+  return authedFetch(request, (token) =>
+    fetch(`${BACKEND_URL}${path}`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
+    }),
+  );
 }

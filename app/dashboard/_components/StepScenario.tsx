@@ -4,13 +4,17 @@ import { useRef } from "react";
 import { SCENARIOS, type ScenarioId } from "@/lib/dashboard-data";
 import ScenarioCard from "./ScenarioCard";
 
-const ACCEPTED_DOCUMENT_TYPES = ".pdf,.doc,.docx,.txt";
-const MAX_DOCUMENT_SIZE_MB = 10;
+const ACCEPTED_DOCUMENT_TYPES = ".pdf,.docx,.txt";
+const MAX_DOCUMENT_SIZE_MB = 15;
+
+export type DocumentStatus = "idle" | "uploading" | "ready" | "failed";
 
 type StepScenarioProps = {
   selectedScenario: ScenarioId | null;
   topic: string;
   document: File | null;
+  documentStatus: DocumentStatus;
+  documentError: string | null;
   onSelectScenario: (id: ScenarioId) => void;
   onTopicChange: (topic: string) => void;
   onDocumentChange: (file: File | null) => void;
@@ -21,13 +25,16 @@ function StepScenario({
   selectedScenario,
   topic,
   document,
+  documentStatus,
+  documentError,
   onSelectScenario,
   onTopicChange,
   onDocumentChange,
   onNext,
 }: StepScenarioProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const canProceed = Boolean(selectedScenario) && topic.trim().length > 0;
+  const canProceed =
+    Boolean(selectedScenario) && topic.trim().length > 0 && documentStatus !== "uploading";
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] ?? null;
@@ -92,13 +99,26 @@ function StepScenario({
 
             {document ? (
               <div className="flex items-center justify-between gap-3 border-2 border-ink bg-cream px-4 py-3">
-                <span className="truncate font-inter text-[0.85rem] text-ink">
-                  {document.name}
-                </span>
+                <div className="min-w-0 flex-1">
+                  <span className="block truncate font-inter text-[0.85rem] text-ink">
+                    {document.name}
+                  </span>
+                  {documentStatus === "uploading" && (
+                    <span className="text-[0.72rem] text-mid">Uploading &amp; processing…</span>
+                  )}
+                  {documentStatus === "ready" && (
+                    <span className="text-[0.72rem] font-bold text-green">Ready</span>
+                  )}
+                  {documentStatus === "failed" && (
+                    <span className="text-[0.72rem] font-bold text-sienna">
+                      {documentError ?? "Upload failed"}
+                    </span>
+                  )}
+                </div>
                 <button
                   type="button"
                   onClick={handleRemoveDocument}
-                  className="neu-press-sm cursor-pointer border-2 border-ink bg-white px-3 py-1.5 font-grotesk text-[0.72rem] font-bold text-ink uppercase shadow-neu-sm"
+                  className="neu-press-sm shrink-0 cursor-pointer border-2 border-ink bg-white px-3 py-1.5 font-grotesk text-[0.72rem] font-bold text-ink uppercase shadow-neu-sm"
                 >
                   Remove
                 </button>
@@ -109,7 +129,7 @@ function StepScenario({
                 onClick={() => fileInputRef.current?.click()}
                 className="neu-press-sm w-full cursor-pointer border-2 border-dashed border-ink bg-cream px-4 py-3 text-left font-inter text-[0.85rem] text-mid shadow-neu-sm"
               >
-                Upload a document (PDF, DOC, or TXT) for panelists to ask from
+                Upload a document (PDF, DOCX, or TXT) for panelists to ask from
               </button>
             )}
 
