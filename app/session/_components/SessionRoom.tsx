@@ -32,6 +32,7 @@ import RoomScene from "./RoomScene";
 import SessionTopBar from "./SessionTopBar";
 import ScorePanel from "./ScorePanel";
 import QuestionCounter from "./QuestionCounter";
+import AnswerTimer from "./AnswerTimer";
 import BottomControls from "./BottomControls";
 import TranscriptPanel from "./TranscriptPanel";
 import EndSessionModal from "./EndSessionModal";
@@ -90,6 +91,7 @@ function SessionRoom() {
   const [activeGesture, setActiveGesture] = useState<PanelistGesture>(PANELIST_GESTURES[0]);
   const [activeQuestion, setActiveQuestion] = useState("");
   const [waitingForAnswer, setWaitingForAnswer] = useState(false);
+  const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [serverThinking, setServerThinking] = useState(false);
   const [transcript, setTranscript] = useState<TranscriptMessage[]>([]);
   const [elapsed, setElapsed] = useState(0);
@@ -101,6 +103,7 @@ function SessionRoom() {
   const gestureCounterRef = useRef(0);
   const turnSequenceRef = useRef(0);
   const lastTurnGesturesRef = useRef<TurnGesture[] | null>(null);
+  const pendingAnswerTimerRef = useRef<number | null>(null);
 
   const panelistIndexById = useMemo(() => {
     const map = new Map<string, number>();
@@ -141,6 +144,12 @@ function SessionRoom() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!waitingForAnswer || paused || timeLeft === null || timeLeft <= 0) return;
+    const timeout = window.setTimeout(() => setTimeLeft((value) => (value !== null ? value - 1 : value)), 1000);
+    return () => window.clearTimeout(timeout);
+  }, [waitingForAnswer, paused, timeLeft]);
+
   const finishSession = useCallback(() => {
     speechCleanupRef.current?.();
     cancelSpeech();
@@ -175,6 +184,7 @@ function SessionRoom() {
       setActiveSpeaker(null);
       setServerThinking(false);
       setWaitingForAnswer(payload.awaiting_user_response);
+      setTimeLeft(payload.awaiting_user_response ? payload.answer_timer_seconds : null);
 
       if (payload.awaiting_user_response) {
         answerStartedAtRef.current = Date.now();
@@ -203,6 +213,7 @@ function SessionRoom() {
       gestureCounterRef.current += 1;
       const gesture = PANELIST_GESTURES[gestureCounterRef.current % PANELIST_GESTURES.length];
       lastTurnGesturesRef.current = [{ t_ms: 0, gesture }];
+      pendingAnswerTimerRef.current = payload.answer_timer_seconds;
       setServerThinking(false);
       setWaitingForAnswer(false);
 
@@ -215,6 +226,7 @@ function SessionRoom() {
       const onDone = () => {
         setActiveSpeaker(null);
         setWaitingForAnswer(true);
+        setTimeLeft(pendingAnswerTimerRef.current);
         answerStartedAtRef.current = Date.now();
         setTranscript((prev) => [
           ...prev,
@@ -271,6 +283,7 @@ function SessionRoom() {
 
       setTranscript((prev) => [...prev, { id: createId("msg"), speaker: "You", text, isUser: true }]);
       setWaitingForAnswer(false);
+      setTimeLeft(null);
       setServerThinking(true);
 
       const turnSequence = turnSequenceRef.current;
@@ -406,6 +419,7 @@ function SessionRoom() {
 
       <ScorePanel scores={scores} started={questionCount > 0} />
       <QuestionCounter count={questionCount} />
+      {timeLeft !== null && <AnswerTimer secondsLeft={timeLeft} />}
 
       {serverNotice && (
         <div className="pointer-events-none absolute top-4 left-1/2 z-120 -translate-x-1/2 border-2 border-ink bg-sienna px-4 py-2 font-grotesk text-xs font-bold text-white shadow-[3px_3px_0_#1A1109]">

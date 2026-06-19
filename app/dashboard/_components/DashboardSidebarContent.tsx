@@ -28,6 +28,7 @@ type ApiSession = {
   score: number;
   status: ApiSessionStatus;
   created_at: string;
+  save_transcript?: boolean;
 };
 
 type SessionsPage = {
@@ -45,6 +46,7 @@ type SessionDisplay = {
   statusLabel: string;
   statusDotClass: string;
   status: ApiSessionStatus;
+  hasTranscript: boolean;
 };
 
 function scoreClassFor(score: number): string {
@@ -81,6 +83,7 @@ function toDisplaySession(session: ApiSession): SessionDisplay {
     statusLabel: badge.label,
     statusDotClass: badge.dotClass,
     status: session.status,
+    hasTranscript: session.save_transcript !== false,
   };
 }
 
@@ -289,7 +292,11 @@ function DashboardSidebarContent({
                 key={session.id}
                 {...session}
                 collapsed={collapsed}
-                href={session.status === "completed" ? `/replay/${session.id}` : undefined}
+                href={
+                  session.status === "completed" && session.hasTranscript
+                    ? `/replay/${session.id}`
+                    : undefined
+                }
               />
             ))}
             {loadingMore && !collapsed && (

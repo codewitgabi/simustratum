@@ -12,6 +12,7 @@ export type SessionStatePayload = {
   structure: number;
   current_panelist_id: string | null;
   awaiting_user_response: boolean;
+  answer_timer_seconds: number | null;
 };
 
 export type ScoreUpdatePayload = {
@@ -26,6 +27,7 @@ export type PanelistQuestionPayload = {
   question_text: string;
   is_followup: boolean;
   audio_url: string | null;
+  answer_timer_seconds: number | null;
 };
 
 export type SessionCompletePayload = {
