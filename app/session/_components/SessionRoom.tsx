@@ -154,12 +154,13 @@ function SessionRoom() {
   }, [cancelSpeech, stopListening, stopRecording]);
 
   const speakQuestion = useCallback(
-    (text: string, panelistIndex: number, onDone: () => void) => {
+    (text: string, panelistIndex: number, onDone: () => void, onStart: () => void) => {
       const profile = PANELIST_VOICE_PROFILES[panelistIndex % PANELIST_VOICE_PROFILES.length];
       speechCleanupRef.current?.();
       if (audioEnabled) {
-        speechCleanupRef.current = speak(text, panelistIndex, profile, onDone);
+        speechCleanupRef.current = speak(text, panelistIndex, profile, onDone, onStart);
       } else {
+        onStart();
         const timeout = window.setTimeout(onDone, estimateSpeechDurationMs(text));
         speechCleanupRef.current = () => window.clearTimeout(timeout);
       }
@@ -203,10 +204,13 @@ function SessionRoom() {
       const gesture = PANELIST_GESTURES[gestureCounterRef.current % PANELIST_GESTURES.length];
       lastTurnGesturesRef.current = [{ t_ms: 0, gesture }];
       setServerThinking(false);
-      setActiveSpeaker(panelistIndex);
-      setActiveGesture(gesture);
-      setActiveQuestion(payload.question_text);
       setWaitingForAnswer(false);
+
+      const onStart = () => {
+        setActiveSpeaker(panelistIndex);
+        setActiveGesture(gesture);
+        setActiveQuestion(payload.question_text);
+      };
 
       const onDone = () => {
         setActiveSpeaker(null);
@@ -218,7 +222,7 @@ function SessionRoom() {
         ]);
       };
 
-      speakQuestion(payload.question_text, panelistIndex, onDone);
+      speakQuestion(payload.question_text, panelistIndex, onDone, onStart);
     },
     [panelistIndexById, panelists, speakQuestion],
   );

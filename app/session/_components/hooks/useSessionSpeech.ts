@@ -75,8 +75,10 @@ export function useSessionSpeech() {
       panelistIndex: number,
       profile: VoiceProfile,
       onEnd: () => void,
+      onStart?: () => void,
     ) => {
       if (!ttsSupported) {
+        onStart?.();
         const timeout = window.setTimeout(
           onEnd,
           estimateSpeechDurationMs(text),
@@ -100,6 +102,10 @@ export function useSessionSpeech() {
         onEnd();
       };
 
+      // Caption/avatar state must wait for this, not fire when speak() is
+      // called — speechSynthesis has its own startup latency before audio
+      // actually begins, especially right after cancel().
+      utterance.onstart = () => onStart?.();
       utterance.onend = finish;
       utterance.onerror = finish;
 

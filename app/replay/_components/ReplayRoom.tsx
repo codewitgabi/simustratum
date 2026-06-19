@@ -160,14 +160,18 @@ function ReplayRoom({ sessionId }: ReplayRoomProps) {
 
         setCaptionSpeaker("");
         setCaptionText("");
-        setActiveSpeaker(panelistIndex);
-        setActiveGesture(gesture);
-        setActiveQuestion(turn.text);
+
+        const onStart = () => {
+          setActiveSpeaker(panelistIndex);
+          setActiveGesture(gesture);
+          setActiveQuestion(turn.text);
+        };
 
         if (ttsSupported) {
           const profile = PANELIST_VOICE_PROFILES[panelistIndex % PANELIST_VOICE_PROFILES.length];
-          speechCleanupRef.current = speak(turn.text, panelistIndex, profile, onDone);
+          speechCleanupRef.current = speak(turn.text, panelistIndex, profile, onDone, onStart);
         } else {
+          onStart();
           const fallbackMs = Math.max(turn.ended_at_ms - turn.started_at_ms, 1200);
           advanceTimeoutRef.current = window.setTimeout(onDone, fallbackMs);
         }
