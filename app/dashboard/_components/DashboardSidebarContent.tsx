@@ -44,6 +44,7 @@ type SessionDisplay = {
   scoreClass: string;
   statusLabel: string;
   statusDotClass: string;
+  status: ApiSessionStatus;
 };
 
 function scoreClassFor(score: number): string {
@@ -79,6 +80,7 @@ function toDisplaySession(session: ApiSession): SessionDisplay {
     scoreClass: scoreClassFor(session.score),
     statusLabel: badge.label,
     statusDotClass: badge.dotClass,
+    status: session.status,
   };
 }
 
@@ -287,6 +289,7 @@ function DashboardSidebarContent({
                 key={session.id}
                 {...session}
                 collapsed={collapsed}
+                href={session.status === "completed" ? `/replay/${session.id}` : undefined}
               />
             ))}
             {loadingMore && !collapsed && (

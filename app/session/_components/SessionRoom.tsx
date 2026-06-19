@@ -18,12 +18,15 @@ import {
   type TranscriptMessage,
 } from "@/lib/session-data";
 import { useSessionSpeech } from "./hooks/useSessionSpeech";
+import { useAudioRecorder } from "./hooks/useAudioRecorder";
+import { uploadTurnAudio } from "@/lib/turn-audio";
 import {
   useSessionSocket,
   type PanelistQuestionPayload,
   type ScoreUpdatePayload,
   type SessionCompletePayload,
   type SessionStatePayload,
+  type TurnGesture,
 } from "./hooks/useSessionSocket";
 import RoomScene from "./RoomScene";
 import SessionTopBar from "./SessionTopBar";
@@ -67,6 +70,7 @@ function SessionRoom() {
     startListening,
     stopListening,
   } = useSessionSpeech();
+  const { startRecording, stopRecording } = useAudioRecorder();
 
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [scenario, setScenario] = useState<ScenarioId>(DEFAULT_SCENARIO);
@@ -95,6 +99,8 @@ function SessionRoom() {
   const speechCleanupRef = useRef<(() => void) | null>(null);
   const answerStartedAtRef = useRef<number | null>(null);
   const gestureCounterRef = useRef(0);
+  const turnSequenceRef = useRef(0);
+  const lastTurnGesturesRef = useRef<TurnGesture[] | null>(null);
 
   const panelistIndexById = useMemo(() => {
     const map = new Map<string, number>();
@@ -139,12 +145,13 @@ function SessionRoom() {
     speechCleanupRef.current?.();
     cancelSpeech();
     stopListening();
+    stopRecording();
     setActiveSpeaker(null);
     setWaitingForAnswer(false);
     setServerThinking(false);
     setEndModalOpen(false);
     setEnded(true);
-  }, [cancelSpeech, stopListening]);
+  }, [cancelSpeech, stopListening, stopRecording]);
 
   const speakQuestion = useCallback(
     (text: string, panelistIndex: number, onDone: () => void) => {
@@ -193,9 +200,11 @@ function SessionRoom() {
       const speakerName = panelists[panelistIndex]?.name ?? "Panelist";
 
       gestureCounterRef.current += 1;
+      const gesture = PANELIST_GESTURES[gestureCounterRef.current % PANELIST_GESTURES.length];
+      lastTurnGesturesRef.current = [{ t_ms: 0, gesture }];
       setServerThinking(false);
       setActiveSpeaker(panelistIndex);
-      setActiveGesture(PANELIST_GESTURES[gestureCounterRef.current % PANELIST_GESTURES.length]);
+      setActiveGesture(gesture);
       setActiveQuestion(payload.question_text);
       setWaitingForAnswer(false);
 
@@ -252,7 +261,7 @@ function SessionRoom() {
   });
 
   const handleAnswer = useCallback(
-    (text: string) => {
+    async (text: string) => {
       const durationMs = answerStartedAtRef.current ? Date.now() - answerStartedAtRef.current : 0;
       answerStartedAtRef.current = null;
 
@@ -260,13 +269,24 @@ function SessionRoom() {
       setWaitingForAnswer(false);
       setServerThinking(true);
 
-      const sent = sendUserResponse(text, durationMs);
+      const turnSequence = turnSequenceRef.current;
+      turnSequenceRef.current += 1;
+      const gestures = lastTurnGesturesRef.current;
+      lastTurnGesturesRef.current = null;
+
+      const recorded = await stopRecording();
+      const storageKey =
+        recorded && sessionId
+          ? await uploadTurnAudio(sessionId, turnSequence, recorded.blob, recorded.mimeType)
+          : null;
+
+      const sent = sendUserResponse(text, durationMs, storageKey, gestures);
       if (!sent) {
         setServerThinking(false);
         setServerNotice("Connection lost — reconnecting. Please try again in a moment.");
       }
     },
-    [sendUserResponse],
+    [sendUserResponse, sessionId, stopRecording],
   );
 
   const handleStart = useCallback(() => {
@@ -281,8 +301,9 @@ function SessionRoom() {
       stopListening();
       return;
     }
+    startRecording();
     startListening((text) => handleAnswer(text));
-  }, [isListening, startListening, stopListening, handleAnswer]);
+  }, [isListening, startListening, stopListening, startRecording, handleAnswer]);
 
   const handleTogglePause = useCallback(() => {
     setPaused((prev) => {
@@ -310,6 +331,7 @@ function SessionRoom() {
     speechCleanupRef.current?.();
     cancelSpeech();
     stopListening();
+    stopRecording();
     closeSocket();
     setActiveSpeaker(null);
     setWaitingForAnswer(false);
@@ -337,7 +359,7 @@ function SessionRoom() {
     }
 
     setEnded(true);
-  }, [sessionId, cancelSpeech, stopListening, closeSocket, questionCount]);
+  }, [sessionId, cancelSpeech, stopListening, stopRecording, closeSocket, questionCount]);
 
   const canRespond = started && !ended && !paused && waitingForAnswer && !isListening;
   const micDisabled = !started || ended || paused || (!waitingForAnswer && !isListening);

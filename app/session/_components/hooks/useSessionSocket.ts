@@ -35,6 +35,8 @@ export type SessionCompletePayload = {
   question_count: number;
 };
 
+export type TurnGesture = { t_ms: number; gesture: string };
+
 export type SessionSocketHandlers = {
   onSessionState?: (payload: SessionStatePayload) => void;
   onScoreUpdate?: (payload: ScoreUpdatePayload) => void;
@@ -176,15 +178,21 @@ export function useSessionSocket(sessionId: string | null, handlers: SessionSock
   }, [connect]);
 
   const sendUserResponse = useCallback(
-    (text: string, durationMs: number, audioUrl: string | null = null) => {
+    (
+      text: string,
+      durationMs: number,
+      audioStorageKey: string | null = null,
+      previousTurnGestures: TurnGesture[] | null = null,
+    ) => {
       const socket = socketRef.current;
       if (!socket || socket.readyState !== WebSocket.OPEN) return false;
       socket.send(
         JSON.stringify({
           type: "user_response",
           text,
-          audio_url: audioUrl,
+          audio_storage_key: audioStorageKey,
           duration_ms: durationMs,
+          previous_turn_gestures: previousTurnGestures,
         }),
       );
       return true;
