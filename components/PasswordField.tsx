@@ -46,12 +46,26 @@ function EyeOffIcon() {
 }
 
 type PasswordFieldProps = {
+  id?: string;
+  label?: string;
+  placeholder?: string;
+  autoComplete?: string;
   value: string;
   onChange: (value: string) => void;
   error?: boolean;
+  showStrength?: boolean;
 };
 
-function PasswordField({ value, onChange, error }: PasswordFieldProps) {
+function PasswordField({
+  id = "password",
+  label = "Password",
+  placeholder = "At least 8 characters",
+  autoComplete = "new-password",
+  value,
+  onChange,
+  error,
+  showStrength = true,
+}: PasswordFieldProps) {
   const [visible, setVisible] = useState(false);
 
   const level = value.length === 0 ? 0 : getStrength(value);
@@ -60,17 +74,17 @@ function PasswordField({ value, onChange, error }: PasswordFieldProps) {
   return (
     <div className="flex flex-col gap-1.5">
       <label
-        htmlFor="password"
+        htmlFor={id}
         className="font-grotesk text-[0.72rem] font-bold tracking-[0.08em] text-ink uppercase"
       >
-        Password
+        {label}
       </label>
       <div className="relative">
         <input
-          id="password"
+          id={id}
           type={visible ? "text" : "password"}
-          placeholder="At least 8 characters"
-          autoComplete="new-password"
+          placeholder={placeholder}
+          autoComplete={autoComplete}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           className={[
@@ -88,25 +102,29 @@ function PasswordField({ value, onChange, error }: PasswordFieldProps) {
         </button>
       </div>
 
-      <div className="mt-1 flex gap-1" aria-hidden={value.length === 0}>
-        {Array.from({ length: 4 }).map((_, i) => (
-          <div
-            key={i}
-            className="h-[3px] flex-1"
-            style={{
-              background:
-                value.length > 0 && i < level
-                  ? (activeLevel?.color ?? "rgba(26,17,9,0.1)")
-                  : "rgba(26,17,9,0.1)",
-            }}
-          />
-        ))}
-      </div>
+      {showStrength && (
+        <>
+          <div className="mt-1 flex gap-1" aria-hidden={value.length === 0}>
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div
+                key={i}
+                className="h-[3px] flex-1"
+                style={{
+                  background:
+                    value.length > 0 && i < level
+                      ? (activeLevel?.color ?? "rgba(26,17,9,0.1)")
+                      : "rgba(26,17,9,0.1)",
+                }}
+              />
+            ))}
+          </div>
 
-      {value.length > 0 && activeLevel && (
-        <p className="font-inter text-[0.65rem]" style={{ color: activeLevel.color }}>
-          {activeLevel.label}
-        </p>
+          {value.length > 0 && activeLevel && (
+            <p className="font-inter text-[0.65rem]" style={{ color: activeLevel.color }}>
+              {activeLevel.label}
+            </p>
+          )}
+        </>
       )}
     </div>
   );

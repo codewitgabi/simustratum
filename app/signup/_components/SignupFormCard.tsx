@@ -4,7 +4,7 @@ import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import GoogleSignInButton from "@/components/GoogleSignInButton";
-import PasswordField from "./PasswordField";
+import PasswordField from "@/components/PasswordField";
 import TermsCheckbox from "./TermsCheckbox";
 
 type FieldErrors = {

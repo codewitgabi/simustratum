@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import MicIcon from "@/components/MicIcon";
 import SignupLogo from "@/components/SignupLogo";
 import {
@@ -102,6 +102,7 @@ function DashboardSidebarContent({
   showClose = false,
 }: DashboardSidebarContentProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const initials = user ? getInitials(user.full_name) : "?";
   const displayName = user?.full_name ?? "Guest";
   const displayEmail = user?.email ?? "";
@@ -267,35 +268,34 @@ function DashboardSidebarContent({
             Menu
           </p>
         )}
-        {NAV_ITEMS.map((item) => (
-          <Link
-            key={item.label}
-            href={item.href}
-            onClick={onNavigate}
-            title={collapsed ? item.label : undefined}
-            className={[
-              "dashboard-nav-link flex items-center border-2 no-underline transition-[padding] duration-200",
-              collapsed ? "justify-center px-0 py-2.5" : "gap-3 px-3 py-2.5",
-              item.active
-                ? "active border-ink"
-                : "border-transparent text-white/60",
-            ].join(" ")}
-          >
-            <span
-              className={`nav-icon shrink-0 ${item.active ? "" : "text-white/70"}`}
-            >
-              <NavIcon type={item.icon} />
-            </span>
-            <span
+        {NAV_ITEMS.map((item) => {
+          const active = pathname === item.href;
+          return (
+            <Link
+              key={item.label}
+              href={item.href}
+              onClick={onNavigate}
+              title={collapsed ? item.label : undefined}
               className={[
-                "nav-label font-grotesk text-[0.82rem] font-bold",
-                collapsed ? "sr-only" : "",
+                "dashboard-nav-link flex items-center border-2 no-underline transition-[padding] duration-200",
+                collapsed ? "justify-center px-0 py-2.5" : "gap-3 px-3 py-2.5",
+                active ? "active border-ink" : "border-transparent text-white/60",
               ].join(" ")}
             >
-              {item.label}
-            </span>
-          </Link>
-        ))}
+              <span className={`nav-icon shrink-0 ${active ? "" : "text-white/70"}`}>
+                <NavIcon type={item.icon} />
+              </span>
+              <span
+                className={[
+                  "nav-label font-grotesk text-[0.82rem] font-bold",
+                  collapsed ? "sr-only" : "",
+                ].join(" ")}
+              >
+                {item.label}
+              </span>
+            </Link>
+          );
+        })}
       </nav>
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">

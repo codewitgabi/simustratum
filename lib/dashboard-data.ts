@@ -88,10 +88,9 @@ export const NAV_ITEMS = [
   {
     label: "Dashboard",
     href: "/dashboard",
-    active: true,
     icon: "dashboard",
   },
-  { label: "Settings", href: "#", active: false, icon: "settings" },
+  { label: "Settings", href: "/dashboard/settings", icon: "settings" },
 ];
 
 export const SIDEBAR_WIDTH_EXPANDED = 260;
