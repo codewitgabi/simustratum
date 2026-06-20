@@ -3,8 +3,9 @@ import ForgotPasswordFormPanel from "./_components/ForgotPasswordFormPanel";
 import ForgotPasswordSidebar from "./_components/ForgotPasswordSidebar";
 
 export const metadata: Metadata = {
-  title: "Forgot password — Simustratum",
+  title: "Forgot password",
   description: "Get a link to reset your Simustratum password.",
+  alternates: { canonical: "/forgot-password" },
 };
 
 function ForgotPasswordPage() {

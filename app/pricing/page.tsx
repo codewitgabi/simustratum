@@ -3,8 +3,11 @@ import Link from "next/link";
 import StaticPageLayout from "../_components/StaticPageLayout";
 
 export const metadata: Metadata = {
-  title: "Pricing — Simustratum",
+  title: "Pricing",
   description: "Start free, upgrade when you need more practice.",
+  alternates: { canonical: "/pricing" },
+  openGraph: { title: "Pricing · Simustratum", description: "Start free, upgrade when you need more practice." },
+  twitter: { title: "Pricing · Simustratum", description: "Start free, upgrade when you need more practice." },
 };
 
 const PLANS = [

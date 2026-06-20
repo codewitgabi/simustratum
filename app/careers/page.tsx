@@ -3,8 +3,17 @@ import StaticPageLayout from "../_components/StaticPageLayout";
 import StaticSection from "../_components/StaticSection";
 
 export const metadata: Metadata = {
-  title: "Careers — Simustratum",
+  title: "Careers",
   description: "We're not hiring yet, but here's what we'd look for when we are.",
+  alternates: { canonical: "/careers" },
+  openGraph: {
+    title: "Careers · Simustratum",
+    description: "We're not hiring yet, but here's what we'd look for when we are.",
+  },
+  twitter: {
+    title: "Careers · Simustratum",
+    description: "We're not hiring yet, but here's what we'd look for when we are.",
+  },
 };
 
 function CareersPage() {

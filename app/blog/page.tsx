@@ -3,8 +3,17 @@ import Link from "next/link";
 import StaticPageLayout from "../_components/StaticPageLayout";
 
 export const metadata: Metadata = {
-  title: "Blog — Simustratum",
+  title: "Blog",
   description: "Notes on academic speaking practice, coming soon from Simustratum.",
+  alternates: { canonical: "/blog" },
+  openGraph: {
+    title: "Blog · Simustratum",
+    description: "Notes on academic speaking practice, coming soon from Simustratum.",
+  },
+  twitter: {
+    title: "Blog · Simustratum",
+    description: "Notes on academic speaking practice, coming soon from Simustratum.",
+  },
 };
 
 function BlogPage() {

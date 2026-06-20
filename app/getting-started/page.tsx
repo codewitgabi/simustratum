@@ -4,8 +4,17 @@ import StaticPageLayout from "../_components/StaticPageLayout";
 import StaticSection from "../_components/StaticSection";
 
 export const metadata: Metadata = {
-  title: "Getting started — Simustratum",
+  title: "Getting started",
   description: "A quick walkthrough of your first Simustratum practice session.",
+  alternates: { canonical: "/getting-started" },
+  openGraph: {
+    title: "Getting started · Simustratum",
+    description: "A quick walkthrough of your first Simustratum practice session.",
+  },
+  twitter: {
+    title: "Getting started · Simustratum",
+    description: "A quick walkthrough of your first Simustratum practice session.",
+  },
 };
 
 function GettingStartedPage() {

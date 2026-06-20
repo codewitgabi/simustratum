@@ -3,8 +3,11 @@ import StaticPageLayout from "../_components/StaticPageLayout";
 import StaticSection from "../_components/StaticSection";
 
 export const metadata: Metadata = {
-  title: "Cookie Policy — Simustratum",
+  title: "Cookie Policy",
   description: "How Simustratum uses cookies and local storage.",
+  alternates: { canonical: "/cookies" },
+  openGraph: { title: "Cookie Policy · Simustratum", description: "How Simustratum uses cookies and local storage." },
+  twitter: { title: "Cookie Policy · Simustratum", description: "How Simustratum uses cookies and local storage." },
 };
 
 function CookiesPage() {

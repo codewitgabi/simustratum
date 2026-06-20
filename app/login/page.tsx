@@ -5,9 +5,20 @@ import LoginFormPanel from "./_components/LoginFormPanel";
 import LoginSidebar from "./_components/LoginSidebar";
 
 export const metadata: Metadata = {
-  title: "Sign in — Simustratum",
+  title: "Sign in",
   description:
     "Sign in to Simustratum to continue practicing with AI panelists and track your progress.",
+  alternates: { canonical: "/login" },
+  openGraph: {
+    title: "Sign in · Simustratum",
+    description:
+      "Sign in to Simustratum to continue practicing with AI panelists and track your progress.",
+  },
+  twitter: {
+    title: "Sign in · Simustratum",
+    description:
+      "Sign in to Simustratum to continue practicing with AI panelists and track your progress.",
+  },
 };
 
 async function LoginPage() {

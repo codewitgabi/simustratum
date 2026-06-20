@@ -6,8 +6,9 @@ import DashboardSidebar from "../_components/DashboardSidebar";
 import SettingsContent from "./_components/SettingsContent";
 
 export const metadata: Metadata = {
-  title: "Account Settings — Simustratum",
+  title: "Account Settings",
   description: "Manage your profile, password, and account.",
+  robots: { index: false, follow: false },
 };
 
 async function SettingsPage() {

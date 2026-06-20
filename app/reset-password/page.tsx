@@ -4,8 +4,9 @@ import ResetPasswordFormPanel from "./_components/ResetPasswordFormPanel";
 import ResetPasswordSidebar from "./_components/ResetPasswordSidebar";
 
 export const metadata: Metadata = {
-  title: "Reset password — Simustratum",
+  title: "Reset password",
   description: "Choose a new password for your Simustratum account.",
+  robots: { index: false, follow: false },
 };
 
 function ResetPasswordPage() {

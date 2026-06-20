@@ -3,8 +3,17 @@ import StaticPageLayout from "../_components/StaticPageLayout";
 import StaticSection from "../_components/StaticSection";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy — Simustratum",
+  title: "Privacy Policy",
   description: "How Simustratum collects, uses, and protects your data.",
+  alternates: { canonical: "/privacy" },
+  openGraph: {
+    title: "Privacy Policy · Simustratum",
+    description: "How Simustratum collects, uses, and protects your data.",
+  },
+  twitter: {
+    title: "Privacy Policy · Simustratum",
+    description: "How Simustratum collects, uses, and protects your data.",
+  },
 };
 
 function PrivacyPage() {

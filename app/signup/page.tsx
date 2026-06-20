@@ -5,9 +5,20 @@ import SignupFormPanel from "./_components/SignupFormPanel";
 import SignupSidebar from "./_components/SignupSidebar";
 
 export const metadata: Metadata = {
-  title: "Sign up — Simustratum",
+  title: "Sign up",
   description:
     "Create your Simustratum account and start practicing with AI panelists. Your first session is free.",
+  alternates: { canonical: "/signup" },
+  openGraph: {
+    title: "Sign up · Simustratum",
+    description:
+      "Create your Simustratum account and start practicing with AI panelists. Your first session is free.",
+  },
+  twitter: {
+    title: "Sign up · Simustratum",
+    description:
+      "Create your Simustratum account and start practicing with AI panelists. Your first session is free.",
+  },
 };
 
 async function SignupPage() {

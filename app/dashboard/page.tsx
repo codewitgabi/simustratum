@@ -5,9 +5,10 @@ import DashboardSidebar from "./_components/DashboardSidebar";
 import NewSessionWizard from "./_components/NewSessionWizard";
 
 export const metadata: Metadata = {
-  title: "Dashboard — Simustratum",
+  title: "Dashboard",
   description:
     "Start a new practice session, configure your AI panel, and review your setup.",
+  robots: { index: false, follow: false },
 };
 
 async function DashboardPage() {

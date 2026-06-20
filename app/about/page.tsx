@@ -3,8 +3,11 @@ import StaticPageLayout from "../_components/StaticPageLayout";
 import StaticSection from "../_components/StaticSection";
 
 export const metadata: Metadata = {
-  title: "About — Simustratum",
+  title: "About",
   description: "Why we built Simustratum and who it's for.",
+  alternates: { canonical: "/about" },
+  openGraph: { title: "About · Simustratum", description: "Why we built Simustratum and who it's for." },
+  twitter: { title: "About · Simustratum", description: "Why we built Simustratum and who it's for." },
 };
 
 function AboutPage() {

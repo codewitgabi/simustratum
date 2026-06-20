@@ -4,8 +4,11 @@ import StaticPageLayout from "../_components/StaticPageLayout";
 import StaticSection from "../_components/StaticSection";
 
 export const metadata: Metadata = {
-  title: "Contact us — Simustratum",
+  title: "Contact us",
   description: "Get in touch with the Simustratum team.",
+  alternates: { canonical: "/contact" },
+  openGraph: { title: "Contact us · Simustratum", description: "Get in touch with the Simustratum team." },
+  twitter: { title: "Contact us · Simustratum", description: "Get in touch with the Simustratum team." },
 };
 
 function ContactPage() {

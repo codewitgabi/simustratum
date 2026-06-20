@@ -3,8 +3,17 @@ import Link from "next/link";
 import StaticPageLayout from "../_components/StaticPageLayout";
 
 export const metadata: Metadata = {
-  title: "FAQs — Simustratum",
+  title: "FAQs",
   description: "Answers to common questions about practicing on Simustratum.",
+  alternates: { canonical: "/faq" },
+  openGraph: {
+    title: "FAQs · Simustratum",
+    description: "Answers to common questions about practicing on Simustratum.",
+  },
+  twitter: {
+    title: "FAQs · Simustratum",
+    description: "Answers to common questions about practicing on Simustratum.",
+  },
 };
 
 const FAQS = [
@@ -46,6 +55,16 @@ const FAQS = [
   },
 ];
 
+const FAQ_JSON_LD = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: FAQS.map((item) => ({
+    "@type": "Question",
+    name: item.q,
+    acceptedAnswer: { "@type": "Answer", text: item.a },
+  })),
+};
+
 function FaqPage() {
   return (
     <StaticPageLayout
@@ -53,6 +72,10 @@ function FaqPage() {
       title="Questions people actually ask"
       intro="If yours isn't here, just reach out — we're happy to answer it directly."
     >
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_JSON_LD) }}
+      />
       <div className="flex flex-col border-2 border-ink shadow-neu-lg">
         {FAQS.map((item, index) => (
           <div

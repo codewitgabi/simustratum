@@ -3,8 +3,11 @@ import StaticPageLayout from "../_components/StaticPageLayout";
 import StaticSection from "../_components/StaticSection";
 
 export const metadata: Metadata = {
-  title: "Terms of Service — Simustratum",
+  title: "Terms of Service",
   description: "The terms that govern your use of Simustratum.",
+  alternates: { canonical: "/terms" },
+  openGraph: { title: "Terms of Service · Simustratum", description: "The terms that govern your use of Simustratum." },
+  twitter: { title: "Terms of Service · Simustratum", description: "The terms that govern your use of Simustratum." },
 };
 
 function TermsPage() {
