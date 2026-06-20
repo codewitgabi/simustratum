@@ -1,21 +1,39 @@
+import Link from "next/link";
 import Logo from "@/components/Logo";
 
 const FOOTER_LINKS = [
   {
     title: "Product",
-    links: ["Features", "Practice Modes", "How it works", "Pricing"],
+    links: [
+      { label: "Features", href: "/#features" },
+      { label: "Practice Modes", href: "/#modes" },
+      { label: "How it works", href: "/#how" },
+      { label: "Pricing", href: "/pricing" },
+    ],
   },
   {
     title: "Support",
-    links: ["Getting started", "FAQs", "Contact us"],
+    links: [
+      { label: "Getting started", href: "/getting-started" },
+      { label: "FAQs", href: "/faq" },
+      { label: "Contact us", href: "/contact" },
+    ],
   },
   {
     title: "Company",
-    links: ["About", "Blog", "Careers"],
+    links: [
+      { label: "About", href: "/about" },
+      { label: "Blog", href: "/blog" },
+      { label: "Careers", href: "/careers" },
+    ],
   },
   {
     title: "Legal",
-    links: ["Privacy Policy", "Terms", "Cookies"],
+    links: [
+      { label: "Privacy Policy", href: "/privacy" },
+      { label: "Terms", href: "/terms" },
+      { label: "Cookies", href: "/cookies" },
+    ],
   },
 ];
 
@@ -39,13 +57,13 @@ function Footer() {
                 {column.title}
               </p>
               {column.links.map((link) => (
-                <a
-                  key={link}
-                  href="#"
+                <Link
+                  key={link.label}
+                  href={link.href}
                   className="mb-2.5 block text-[0.85rem] text-mid no-underline transition-colors hover:text-sienna last:mb-0"
                 >
-                  {link}
-                </a>
+                  {link.label}
+                </Link>
               ))}
             </div>
           ))}

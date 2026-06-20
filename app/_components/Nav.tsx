@@ -7,28 +7,28 @@ function Nav() {
       <Logo href="/" />
       <ul className="flex max-sm:hidden list-none items-center gap-2">
         <li>
-          <a
-            href="#features"
+          <Link
+            href="/#features"
             className="neu-nav-link border-2 border-transparent px-4 py-[7px] text-[0.875rem] font-semibold text-ink no-underline"
           >
             Features
-          </a>
+          </Link>
         </li>
         <li>
-          <a
-            href="#how"
+          <Link
+            href="/#how"
             className="neu-nav-link border-2 border-transparent px-4 py-[7px] text-[0.875rem] font-semibold text-ink no-underline"
           >
             How it works
-          </a>
+          </Link>
         </li>
         <li>
-          <a
-            href="#modes"
+          <Link
+            href="/#modes"
             className="neu-nav-link border-2 border-transparent px-4 py-[7px] text-[0.875rem] font-semibold text-ink no-underline"
           >
             Modes
-          </a>
+          </Link>
         </li>
         <li>
           <Link

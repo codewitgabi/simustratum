@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 const MODES = [
   {
     icon: "📝",
@@ -128,9 +130,9 @@ function Modes() {
 
           <div className="border-2 border-ink shadow-neu-lg">
             {MODES.map((mode, index) => (
-              <a
+              <Link
                 key={mode.name}
-                href="#"
+                href="/signup"
                 className={[
                   "mode-item flex cursor-pointer items-center gap-4 px-[22px] py-[18px] bg-white no-underline text-inherit",
                   mode.active ? "active" : "",
@@ -149,7 +151,7 @@ function Modes() {
                   </p>
                 </div>
                 <span className="mode-arrow text-[1rem] text-mid">→</span>
-              </a>
+              </Link>
             ))}
           </div>
         </div>
