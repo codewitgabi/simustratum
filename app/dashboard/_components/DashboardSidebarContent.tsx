@@ -13,6 +13,7 @@ import {
 import { formatRelativeTime } from "@/lib/dashboard-utils";
 import { getInitials, type SessionUser } from "@/lib/auth";
 import RecentSessionItem from "./RecentSessionItem";
+import DeleteSessionModal from "./DeleteSessionModal";
 import NavIcon from "./NavIcon";
 import LogoutButton from "./LogoutButton";
 
@@ -110,6 +111,9 @@ function DashboardSidebarContent({
   const [total, setTotal] = useState(0);
   const [loadingSessions, setLoadingSessions] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<SessionDisplay | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const fetchSessionsPage = useCallback(
     async (pageNum: number): Promise<SessionsPage | null> => {
@@ -147,6 +151,35 @@ function DashboardSidebarContent({
       cancelled = true;
     };
   }, [fetchSessionsPage]);
+
+  const handleDeleteSession = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    setDeleteError(null);
+
+    try {
+      const res = await fetch(`/api/v1/sessions/${deleteTarget.id}`, { method: "DELETE" });
+      const data = await res.json();
+
+      if (data.logged_out) {
+        router.push("/login");
+        return;
+      }
+
+      if (!res.ok || !data.success) {
+        setDeleteError(data.message ?? "Couldn't delete this session. Try again.");
+        return;
+      }
+
+      setSessions((prev) => prev.filter((session) => session.id !== deleteTarget.id));
+      setTotal((prev) => Math.max(0, prev - 1));
+      setDeleteTarget(null);
+    } catch {
+      setDeleteError("Couldn't reach the server. Try again.");
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   const handleSessionsScroll = (e: React.UIEvent<HTMLDivElement>) => {
     if (loadingMore || loadingSessions || sessions.length >= total) return;
@@ -297,6 +330,14 @@ function DashboardSidebarContent({
                     ? `/replay/${session.id}`
                     : undefined
                 }
+                onDelete={
+                  collapsed
+                    ? undefined
+                    : () => {
+                        setDeleteError(null);
+                        setDeleteTarget(session);
+                      }
+                }
               />
             ))}
             {loadingMore && !collapsed && (
@@ -330,6 +371,16 @@ function DashboardSidebarContent({
           </>
         )}
       </div>
+
+      <DeleteSessionModal
+        open={deleteTarget !== null}
+        loading={deleting}
+        error={deleteError}
+        onCancel={() => {
+          if (!deleting) setDeleteTarget(null);
+        }}
+        onConfirm={handleDeleteSession}
+      />
     </div>
   );
 }
