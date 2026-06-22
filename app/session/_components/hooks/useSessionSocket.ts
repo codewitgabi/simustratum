@@ -123,7 +123,25 @@ export function useSessionSocket(sessionId: string | null, handlers: SessionSock
       }
     };
 
+    socket.onerror = (event) => {
+      console.error("[useSessionSocket] WebSocket error", {
+        sessionId,
+        url,
+        readyState: socket.readyState,
+        event,
+      });
+    };
+
     socket.onclose = (event) => {
+      const intentional = closedByClientRef.current || event.code === 1000 || event.code === 4409;
+      const log = intentional ? console.info : console.error;
+      log("[useSessionSocket] WebSocket closed", {
+        sessionId,
+        code: event.code,
+        reason: event.reason,
+        wasClean: event.wasClean,
+      });
+
       socketRef.current = null;
       setStatus("closed");
 
