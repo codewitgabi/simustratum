@@ -47,11 +47,16 @@ export type SessionSocketHandlers = {
   onServerError?: (message: string) => void;
   onLoggedOut?: () => void;
   onHardError?: (reason: "forbidden" | "not_found") => void;
+  /** Fired once reconnect attempts are exhausted after repeated abnormal
+   * closes (e.g. the server is unreachable) — the caller should show a
+   * fatal error instead of leaving the user staring at a frozen session. */
+  onConnectionFailed?: () => void;
 };
 
 export type SessionSocketStatus = "idle" | "connecting" | "open" | "closed";
 
 const RECONNECT_DELAY_MS = 1500;
+const MAX_RECONNECT_ATTEMPTS = 5;
 
 /** Drives the live session WebSocket: connects via a server-minted token,
  * dispatches typed messages to the latest handlers, and reconnects
@@ -65,6 +70,7 @@ export function useSessionSocket(sessionId: string | null, handlers: SessionSock
   const refreshAttemptedRef = useRef(false);
   const closedByClientRef = useRef(false);
   const reconnectTimeoutRef = useRef<number | null>(null);
+  const reconnectAttemptsRef = useRef(0);
   const connectRef = useRef<() => void>(() => {});
 
   useEffect(() => {
@@ -93,6 +99,7 @@ export function useSessionSocket(sessionId: string | null, handlers: SessionSock
 
     socket.onopen = () => {
       refreshAttemptedRef.current = false;
+      reconnectAttemptsRef.current = 0;
       setStatus("open");
     };
 
@@ -175,7 +182,18 @@ export function useSessionSocket(sessionId: string | null, handlers: SessionSock
         return;
       }
 
-      reconnectTimeoutRef.current = window.setTimeout(() => connectRef.current(), RECONNECT_DELAY_MS);
+      reconnectAttemptsRef.current += 1;
+      if (reconnectAttemptsRef.current > MAX_RECONNECT_ATTEMPTS) {
+        console.error("[useSessionSocket] giving up after repeated abnormal closes", {
+          sessionId,
+          attempts: reconnectAttemptsRef.current - 1,
+        });
+        handlersRef.current.onConnectionFailed?.();
+        return;
+      }
+
+      const delay = RECONNECT_DELAY_MS * 2 ** (reconnectAttemptsRef.current - 1);
+      reconnectTimeoutRef.current = window.setTimeout(() => connectRef.current(), Math.min(delay, 15000));
     };
   }, [sessionId]);
 
@@ -185,6 +203,7 @@ export function useSessionSocket(sessionId: string | null, handlers: SessionSock
 
   useEffect(() => {
     refreshAttemptedRef.current = false;
+    reconnectAttemptsRef.current = 0;
     queueMicrotask(() => connect());
 
     return () => {

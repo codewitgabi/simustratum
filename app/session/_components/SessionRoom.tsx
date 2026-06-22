@@ -266,6 +266,10 @@ function SessionRoom() {
     );
   }, []);
 
+  const handleConnectionFailed = useCallback(() => {
+    setFatalError("Couldn't connect to the session. Check your connection and try again.");
+  }, []);
+
   const { sendUserResponse, close: closeSocket } = useSessionSocket(started ? sessionId : null, {
     onSessionState: handleSessionState,
     onScoreUpdate: handleScoreUpdate,
@@ -273,6 +277,7 @@ function SessionRoom() {
     onSessionComplete: handleSessionComplete,
     onServerError: handleServerError,
     onLoggedOut: handleLoggedOut,
+    onConnectionFailed: handleConnectionFailed,
     onHardError: handleHardError,
   });
 
