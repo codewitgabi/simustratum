@@ -35,6 +35,10 @@ function StartOverlay({
         >
           Enter the room
         </button>
+        <p className="mt-4 font-inter text-2xs leading-relaxed text-white/40">
+          Having trouble connecting or with audio? Try disabling browser extensions (ad blockers,
+          privacy/VPN tools) — they can block the session connection or microphone access.
+        </p>
       </div>
     </div>
   );

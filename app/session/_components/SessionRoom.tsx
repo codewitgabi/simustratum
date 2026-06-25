@@ -97,6 +97,7 @@ function SessionRoom() {
   const [elapsed, setElapsed] = useState(0);
   const [fatalError, setFatalError] = useState<string | null>(null);
   const [serverNotice, setServerNotice] = useState<string | null>(null);
+  const [hasConnectedOnce, setHasConnectedOnce] = useState(false);
 
   const speechCleanupRef = useRef<(() => void) | null>(null);
   const answerStartedAtRef = useRef<number | null>(null);
@@ -179,6 +180,7 @@ function SessionRoom() {
 
   const handleSessionState = useCallback(
     (payload: SessionStatePayload) => {
+      setHasConnectedOnce(true);
       setScores({ clarity: payload.clarity, confidence: payload.confidence, structure: payload.structure });
       setQuestionCount(payload.question_count);
       setActiveSpeaker(null);
@@ -270,16 +272,21 @@ function SessionRoom() {
     setFatalError("Couldn't connect to the session. Check your connection and try again.");
   }, []);
 
-  const { sendUserResponse, close: closeSocket } = useSessionSocket(started ? sessionId : null, {
-    onSessionState: handleSessionState,
-    onScoreUpdate: handleScoreUpdate,
-    onPanelistQuestion: handlePanelistQuestion,
-    onSessionComplete: handleSessionComplete,
-    onServerError: handleServerError,
-    onLoggedOut: handleLoggedOut,
-    onConnectionFailed: handleConnectionFailed,
-    onHardError: handleHardError,
-  });
+  const { status: socketStatus, sendUserResponse, close: closeSocket } = useSessionSocket(
+    started ? sessionId : null,
+    {
+      onSessionState: handleSessionState,
+      onScoreUpdate: handleScoreUpdate,
+      onPanelistQuestion: handlePanelistQuestion,
+      onSessionComplete: handleSessionComplete,
+      onServerError: handleServerError,
+      onLoggedOut: handleLoggedOut,
+      onConnectionFailed: handleConnectionFailed,
+      onHardError: handleHardError,
+    },
+  );
+
+  const reconnecting = hasConnectedOnce && started && !ended && socketStatus !== "open";
 
   const handleAnswer = useCallback(
     async (text: string) => {
@@ -429,6 +436,13 @@ function SessionRoom() {
       {serverNotice && (
         <div className="pointer-events-none absolute top-4 left-1/2 z-120 -translate-x-1/2 border-2 border-ink bg-sienna px-4 py-2 font-grotesk text-xs font-bold text-white shadow-[3px_3px_0_#1A1109]">
           {serverNotice}
+        </div>
+      )}
+
+      {reconnecting && (
+        <div className="pointer-events-none absolute top-4 left-1/2 z-120 flex -translate-x-1/2 items-center gap-2 border-2 border-ink bg-camel px-4 py-2 font-grotesk text-xs font-bold text-ink shadow-[3px_3px_0_#1A1109]">
+          <span className="h-2 w-2 animate-pulse rounded-full bg-sienna" />
+          Connection lost — reconnecting…
         </div>
       )}
 
