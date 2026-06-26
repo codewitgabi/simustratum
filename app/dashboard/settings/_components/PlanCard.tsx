@@ -21,10 +21,14 @@ export default function PlanCard() {
   const router = useRouter();
   const [status, setStatus] = useState<BillingStatus | null>(null);
   const [loadError, setLoadError] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
   const [portalLoading, setPortalLoading] = useState(false);
   const [portalError, setPortalError] = useState<string | null>(null);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setLoadError(false);
+    setStatus(null);
     fetch("/api/v1/billing/status")
       .then((r) => r.json())
       .then((data) => {
@@ -39,7 +43,7 @@ export default function PlanCard() {
         }
       })
       .catch(() => setLoadError(true));
-  }, [router]);
+  }, [router, loadAttempt]);
 
   async function handleManageBilling() {
     setPortalLoading(true);
@@ -85,7 +89,16 @@ export default function PlanCard() {
       )}
 
       {loadError && (
-        <p className="text-[0.85rem] text-mid">Could not load plan info. Refresh to try again.</p>
+        <div className="flex items-center gap-3">
+          <p className="text-[0.85rem] text-mid">Could not load plan info.</p>
+          <button
+            type="button"
+            onClick={() => setLoadAttempt((n) => n + 1)}
+            className="font-grotesk text-[0.78rem] font-bold text-sienna underline underline-offset-2 hover:no-underline"
+          >
+            Try again
+          </button>
+        </div>
       )}
 
       {status && (
@@ -125,8 +138,15 @@ export default function PlanCard() {
                 />
               </div>
               {status.sessions_used >= status.sessions_limit && (
-                <p className="mt-2 font-inter text-[0.78rem] font-semibold text-sienna">
-                  You have used all sessions for this month.
+                <p className="mt-2 font-inter text-[0.78rem] text-mid">
+                  Monthly limit reached.{" "}
+                  <Link
+                    href="/plans"
+                    className="font-semibold text-sienna underline underline-offset-2 hover:no-underline"
+                  >
+                    Upgrade to Pro
+                  </Link>{" "}
+                  for unlimited sessions.
                 </p>
               )}
             </div>

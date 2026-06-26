@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { SCENARIOS, type ScenarioId } from "@/lib/dashboard-data";
 import ScenarioCard from "./ScenarioCard";
 
@@ -35,16 +35,19 @@ function StepScenario({
   onNext,
 }: StepScenarioProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [sizeError, setSizeError] = useState<string | null>(null);
   const canProceed =
     Boolean(selectedScenario) && topic.trim().length > 0 && documentStatus !== "uploading";
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] ?? null;
     if (file && file.size > MAX_DOCUMENT_SIZE_MB * 1024 * 1024) {
+      setSizeError(`File exceeds the ${MAX_DOCUMENT_SIZE_MB} MB limit. Please upload a smaller file.`);
       onDocumentChange(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
       return;
     }
+    setSizeError(null);
     onDocumentChange(file);
   };
 
@@ -161,10 +164,16 @@ function StepScenario({
                   onChange={handleFileSelect}
                   className="hidden"
                 />
-                <p className="mt-2 text-[0.72rem] text-mid">
-                  If provided, panelists will draw questions from this document
-                  instead of general knowledge. Max {MAX_DOCUMENT_SIZE_MB}MB.
-                </p>
+                {sizeError ? (
+                  <p className="mt-2 font-inter text-[0.72rem] font-semibold text-sienna">
+                    {sizeError}
+                  </p>
+                ) : (
+                  <p className="mt-2 text-[0.72rem] text-mid">
+                    If provided, panelists will draw questions from this document
+                    instead of general knowledge. Max {MAX_DOCUMENT_SIZE_MB}MB.
+                  </p>
+                )}
               </>
             )}
           </div>

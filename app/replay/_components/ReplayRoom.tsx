@@ -48,6 +48,7 @@ function ReplayRoom({ sessionId }: ReplayRoomProps) {
   const [turnIndex, setTurnIndex] = useState(-1);
   const [playing, setPlaying] = useState(false);
   const [finished, setFinished] = useState(false);
+  const [audioFailed, setAudioFailed] = useState(false);
   const [activeSpeaker, setActiveSpeaker] = useState<number | null>(null);
   const [activeGesture, setActiveGesture] = useState<PanelistGesture>(PANELIST_GESTURES[0]);
   const [activeQuestion, setActiveQuestion] = useState("");
@@ -186,8 +187,8 @@ function ReplayRoom({ sessionId }: ReplayRoomProps) {
         const audio = new Audio(turn.audio_url);
         audioRef.current = audio;
         audio.onended = onDone;
-        audio.onerror = onDone;
-        audio.play().catch(onDone);
+        audio.onerror = () => { setAudioFailed(true); onDone(); };
+        audio.play().catch(() => { setAudioFailed(true); onDone(); });
         return;
       }
 
@@ -220,6 +221,7 @@ function ReplayRoom({ sessionId }: ReplayRoomProps) {
     setActiveSpeaker(null);
     setCaptionText("");
     setFinished(false);
+    setAudioFailed(false);
     playingRef.current = true;
     setPlaying(true);
     playTurnAt(0);
@@ -232,8 +234,12 @@ function ReplayRoom({ sessionId }: ReplayRoomProps) {
 
   if (loading) {
     return (
-      <div className="flex h-screen w-screen items-center justify-center bg-ink font-inter text-white/60">
-        Loading replay…
+      <div className="flex h-screen w-screen flex-col items-center justify-center gap-3 bg-ink">
+        <svg className="animate-spin text-camel" width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden>
+          <circle cx="14" cy="14" r="11" stroke="currentColor" strokeOpacity="0.2" strokeWidth="3" />
+          <path d="M14 3a11 11 0 0 1 11 11" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+        </svg>
+        <p className="font-inter text-sm text-white/50">Loading replay…</p>
       </div>
     );
   }
@@ -301,9 +307,16 @@ function ReplayRoom({ sessionId }: ReplayRoomProps) {
 
       {captionText && (
         <div className="pointer-events-none absolute bottom-24 left-1/2 z-70 w-[90%] max-w-xl -translate-x-1/2 border-2 border-camel bg-ink/90 px-4 py-3 text-center">
-          <p className="mb-1 font-grotesk text-2xs font-bold tracking-[0.08em] text-camel uppercase">
-            {captionSpeaker}
-          </p>
+          <div className="mb-1 flex items-center justify-center gap-2">
+            <p className="font-grotesk text-2xs font-bold tracking-[0.08em] text-camel uppercase">
+              {captionSpeaker}
+            </p>
+            {audioFailed && (
+              <span className="font-grotesk text-2xs font-bold tracking-[0.06em] text-white/30 uppercase">
+                · audio unavailable
+              </span>
+            )}
+          </div>
           <p className="font-inter text-sm text-white">{captionText}</p>
         </div>
       )}

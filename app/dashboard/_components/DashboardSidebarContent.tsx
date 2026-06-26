@@ -313,7 +313,13 @@ function DashboardSidebarContent({
         >
           <div className={collapsed ? "" : "pl-3 pr-1"}>
             {loadingSessions && !collapsed && (
-              <p className="px-3 py-2 text-xxs text-white/35">Loading…</p>
+              <div className="flex items-center gap-2 px-3 py-2">
+                <svg className="animate-spin text-white/30" width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden>
+                  <circle cx="5.5" cy="5.5" r="4" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.4" />
+                  <path d="M5.5 1.5a4 4 0 0 1 4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                </svg>
+                <span className="text-xxs text-white/35">Loading…</span>
+              </div>
             )}
             {!loadingSessions && sessions.length === 0 && !collapsed && (
               <p className="px-3 py-2 text-xxs text-white/35">
@@ -341,7 +347,13 @@ function DashboardSidebarContent({
               />
             ))}
             {loadingMore && !collapsed && (
-              <p className="px-3 py-2 text-xxs text-white/35">Loading more…</p>
+              <div className="flex items-center gap-2 px-3 py-2">
+                <svg className="animate-spin text-white/30" width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden>
+                  <circle cx="5.5" cy="5.5" r="4" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.4" />
+                  <path d="M5.5 1.5a4 4 0 0 1 4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                </svg>
+                <span className="text-xxs text-white/35">Loading more…</span>
+              </div>
             )}
           </div>
         </div>
