@@ -5,13 +5,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ```bash
-pnpm dev       # Start dev server (localhost:3000)
-pnpm build     # Production build
-pnpm start     # Start production server
-pnpm lint      # Run ESLint
+pnpm dev        # Start dev server (localhost:3000)
+pnpm build      # Production build
+pnpm start      # Start production server
+pnpm lint       # Run ESLint
+pnpm test       # Run tests in watch mode (Vitest)
+pnpm test:run   # Run tests once (CI)
 ```
 
-No test suite is configured.
+Tests live in `tests/` (mirrors source layout). Stack: Vitest + React Testing Library + jsdom.
+- `tests/lib/` — pure utility functions (`getInitials`, `initialsFromName`, `sliderLabel`, `formatRelativeTime`)
+- `tests/components/dashboard/` — `StepPanelists` and `StepScenario` (free/pro plan gating)
+- `tests/components/plans/` — `PlansClient` (currency detection, plan redirect, billing API flows)
 
 ## Architecture
 

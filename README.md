@@ -62,12 +62,12 @@ pnpm dev
 Open [http://localhost:3000](http://localhost:3000).
 
 ```bash
-pnpm build    # Production build
-pnpm start    # Start production server
-pnpm lint     # ESLint
+pnpm build      # Production build
+pnpm start      # Start production server
+pnpm lint       # ESLint
+pnpm test       # Vitest watch mode
+pnpm test:run   # Vitest single run (CI)
 ```
-
-> No test suite is configured.
 
 ---
 
