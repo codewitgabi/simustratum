@@ -82,7 +82,7 @@ function SignupFormCard() {
         return;
       }
 
-      router.push("/dashboard");
+      router.push("/plans");
     } catch {
       setServerError("Something went wrong. Please try again.");
     } finally {

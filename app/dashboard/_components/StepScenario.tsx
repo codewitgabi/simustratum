@@ -15,6 +15,7 @@ type StepScenarioProps = {
   document: File | null;
   documentStatus: DocumentStatus;
   documentError: string | null;
+  isPro: boolean;
   onSelectScenario: (id: ScenarioId) => void;
   onTopicChange: (topic: string) => void;
   onDocumentChange: (file: File | null) => void;
@@ -27,6 +28,7 @@ function StepScenario({
   document,
   documentStatus,
   documentError,
+  isPro,
   onSelectScenario,
   onTopicChange,
   onDocumentChange,
@@ -92,12 +94,29 @@ function StepScenario({
               specific as possible.
             </p>
 
-            <label className="mb-2 block font-grotesk text-[0.72rem] font-bold tracking-[0.08em] text-ink uppercase">
-              Have a reference document?{" "}
-              <span className="text-mid font-normal">(optional)</span>
-            </label>
+            <div className="flex items-center gap-2 mb-2">
+              <label className="block font-grotesk text-[0.72rem] font-bold tracking-[0.08em] text-ink uppercase">
+                Have a reference document?{" "}
+                <span className="text-mid font-normal">(optional)</span>
+              </label>
+              {!isPro && (
+                <span className="border border-camel/50 bg-camel/15 px-1.5 py-0.5 font-grotesk text-[0.58rem] font-bold tracking-[0.08em] text-camel uppercase">
+                  Pro
+                </span>
+              )}
+            </div>
 
-            {document ? (
+            {!isPro ? (
+              <div className="relative flex w-full cursor-not-allowed items-center gap-3 border-2 border-ink/20 bg-pale/60 px-4 py-3 opacity-60 select-none">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden className="shrink-0 text-mid">
+                  <rect x="2" y="6" width="10" height="7" rx="1" stroke="currentColor" strokeWidth="1.5" />
+                  <path d="M4.5 6V4.5a2.5 2.5 0 0 1 5 0V6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                </svg>
+                <span className="font-inter text-[0.85rem] text-mid">
+                  Upload a document — available on Student Pro
+                </span>
+              </div>
+            ) : document ? (
               <div className="flex items-center justify-between gap-3 border-2 border-ink bg-cream px-4 py-3">
                 <div className="min-w-0 flex-1">
                   <span className="block truncate font-inter text-[0.85rem] text-ink">
@@ -133,18 +152,21 @@ function StepScenario({
               </button>
             )}
 
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept={ACCEPTED_DOCUMENT_TYPES}
-              onChange={handleFileSelect}
-              className="hidden"
-            />
-
-            <p className="mt-2 text-[0.72rem] text-mid">
-              If provided, panelists will draw questions from this document
-              instead of general knowledge. Max {MAX_DOCUMENT_SIZE_MB}MB.
-            </p>
+            {isPro && (
+              <>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept={ACCEPTED_DOCUMENT_TYPES}
+                  onChange={handleFileSelect}
+                  className="hidden"
+                />
+                <p className="mt-2 text-[0.72rem] text-mid">
+                  If provided, panelists will draw questions from this document
+                  instead of general knowledge. Max {MAX_DOCUMENT_SIZE_MB}MB.
+                </p>
+              </>
+            )}
           </div>
         </div>
       )}

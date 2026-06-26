@@ -2,6 +2,7 @@ import type { SessionUser } from "@/lib/auth";
 import SettingsHeader from "./SettingsHeader";
 import ProfileCard from "./ProfileCard";
 import PasswordCard from "./PasswordCard";
+import PlanCard from "./PlanCard";
 
 type SettingsContentProps = {
   user: SessionUser;
@@ -23,6 +24,7 @@ function SettingsContent({ user }: SettingsContentProps) {
         </div>
 
         <div className="flex max-w-2xl flex-col gap-6">
+          <PlanCard />
           <ProfileCard user={user} />
           <PasswordCard user={user} />
         </div>

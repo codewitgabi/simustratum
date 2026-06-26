@@ -15,9 +15,9 @@ const PLANS = [
     name: "Free",
     price: "₦0",
     period: "forever",
-    description: "Enough to try a real session before you commit to anything.",
+    description: "15 sessions a month — enough to build a real habit before you commit.",
     features: [
-      "1 free practice session",
+      "15 practice sessions per month",
       "1 AI panelist per session",
       "Clarity, confidence & structure scoring",
       "Session replay with voice playback",

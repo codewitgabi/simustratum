@@ -13,7 +13,8 @@ import StepScenario, { type DocumentStatus } from "./StepScenario";
 import StepTabs from "./StepTabs";
 import type { Panelist } from "./PanelistCard";
 
-const MAX_PANELISTS = 3;
+const MAX_PANELISTS_FREE = 1;
+const MAX_PANELISTS_PRO = 3;
 
 function createPanelist(): Panelist {
   return {
@@ -31,6 +32,8 @@ type NewSessionWizardProps = {
 
 function NewSessionWizard({ user }: NewSessionWizardProps) {
   const router = useRouter();
+  const isPro = user?.plan === "pro";
+  const maxPanelists = isPro ? MAX_PANELISTS_PRO : MAX_PANELISTS_FREE;
   const [step, setStep] = useState(1);
   const [selectedScenario, setSelectedScenario] = useState<ScenarioId | null>(
     null,
@@ -61,7 +64,7 @@ function NewSessionWizard({ user }: NewSessionWizardProps) {
   );
 
   const handleAddPanelist = () => {
-    if (panelists.length >= MAX_PANELISTS) return;
+    if (panelists.length >= maxPanelists) return;
     setPanelists((prev) => [...prev, createPanelist()]);
   };
 
@@ -218,6 +221,7 @@ function NewSessionWizard({ user }: NewSessionWizardProps) {
           document={document}
           documentStatus={documentStatus}
           documentError={documentError}
+          isPro={isPro}
           onSelectScenario={setSelectedScenario}
           onTopicChange={setTopic}
           onDocumentChange={handleDocumentChange}
@@ -228,7 +232,8 @@ function NewSessionWizard({ user }: NewSessionWizardProps) {
       {step === 2 && (
         <StepPanelists
           panelists={panelists}
-          maxPanelists={MAX_PANELISTS}
+          maxPanelists={maxPanelists}
+          isPro={isPro}
           onAdd={handleAddPanelist}
           onRemove={handleRemovePanelist}
           onChange={handlePanelistChange}

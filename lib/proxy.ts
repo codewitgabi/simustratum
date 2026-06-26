@@ -2,12 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 
 const BACKEND_URL = process.env.BACKEND_URL ?? "";
 
+export type UserPlan = "free" | "pro";
+
 export type SessionUser = {
   id: string;
   full_name: string;
   email: string;
   is_verified: boolean;
   auth_provider: string;
+  plan?: UserPlan;
 };
 
 /**
